@@ -526,6 +526,45 @@ func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// validate the type of column when there is check constraints
+func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
+	sessionState := session.GetSessionState()
+	if sessionState.Conv == nil || sessionState.Driver == "" {
+		http.Error(w, fmt.Sprintf("Schema is not converted or Driver is not configured properly. Please retry converting the database to Spanner."), http.StatusNotFound)
+		return
+	}
+	sessionState.Conv.ConvLock.Lock()
+	defer sessionState.Conv.ConvLock.Unlock()
+
+	sp := sessionState.Conv.SpSchema
+	src := sessionState.Conv.SrcSchema
+
+	flag := true
+
+	for _, step1 := range src {
+
+		for _, step := range sp[step1.Id].ColDefs {
+
+			if len(sp[step1.Id].CheckConstraint) != 0 && len(src[step1.Id].CheckConstraints) != 0 {
+				spType := step.T.Name
+				srcType := src[step1.Id].ColDefs[step.Id].Type
+
+				actualType := mysqlDefaultTypeMap[srcType.Name]
+
+				if actualType.Name != spType {
+					flag = false
+					break
+				}
+			}
+
+		}
+
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(flag)
+}
+
 // renameForeignKeys checks the new names for spanner name validity, ensures the new names are already not used by existing tables
 // secondary indexes or foreign key constraints. If above checks passed then foreignKey renaming reflected in the schema else appropriate
 // error thrown.

@@ -205,6 +205,10 @@ export class FetchService {
     )
   }
 
+  validateCheckConstraint() {
+    return this.http.get(`${this.url}/validateCheckConstraint`)
+  }
+
   updateTable(tableName: string, data: IUpdateTable): any {
     return this.http.post<HttpResponse<IConv>>(`${this.url}/typemap/table?table=${tableName}`, data)
   }
