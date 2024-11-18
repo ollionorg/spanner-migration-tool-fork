@@ -14,13 +14,15 @@
 
 on:
   push:
-    # branches:
-    #   - master
-    paths:
-      - '.github/workflows/test-coverage.yaml'
+    branches:
+      - test
+    # paths:
+    #   - '.github/workflows/test-coverage.yaml'
   pull_request:
-    paths:
-      - '.github/workflows/test-coverage.yaml'    
+    branches:
+      - test    
+    # paths:
+    #   - '.github/workflows/test-coverage.yaml'    
 name: code-coverage-check
 jobs:
   coverage:
