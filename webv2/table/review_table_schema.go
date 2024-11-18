@@ -109,6 +109,14 @@ func ReviewTableSchema(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			oldName := conv.SrcSchema[tableId].ColDefs[colId].Name
+
+			for i := range conv.SpSchema[tableId].CheckConstraint {
+				originalString := conv.SpSchema[tableId].CheckConstraint[i].Expr
+				updatedValue := strings.ReplaceAll(originalString, oldName, v.Rename)
+				conv.SpSchema[tableId].CheckConstraint[i].Expr = updatedValue
+			}
+
 			interleaveTableSchema = reviewRenameColumn(v.Rename, tableId, colId, conv, interleaveTableSchema)
 
 		}
@@ -148,7 +156,7 @@ func ReviewTableSchema(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if !v.Removed && !v.Add && v.Rename== ""{
+		if !v.Removed && !v.Add && v.Rename == "" {
 			sequences := UpdateAutoGenCol(v.AutoGen, tableId, colId, conv)
 			conv.SpSequences = sequences
 		}
