@@ -19,7 +19,7 @@
 ############################# BUILD ###############################
 # This stage builds the Spanner migration tool binary using its source code.
 
-# Add golang as the base image for the build stage.
+# Add golang as the base image for the build stage. test
 FROM golang:1.23.1 AS build
 
 # Set the default work directory as “/spanner_migration_tool_bin” in the container.

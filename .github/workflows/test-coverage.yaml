@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License. test
+name: code-coverage-check
 
 on:
   push:
@@ -23,7 +24,6 @@ on:
       - master 
     # paths:
     #   - '.github/workflows/test-coverage.yaml'    
-name: code-coverage-check
 jobs:
   coverage:
     runs-on: ubuntu-latest
