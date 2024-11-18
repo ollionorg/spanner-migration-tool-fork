@@ -20,7 +20,7 @@ on:
     #   - '.github/workflows/test-coverage.yaml'
   pull_request:
     branches:
-      - test    
+      - master 
     # paths:
     #   - '.github/workflows/test-coverage.yaml'    
 name: code-coverage-check
