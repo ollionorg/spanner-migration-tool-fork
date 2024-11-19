@@ -450,6 +450,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
                 },
                 maxWidth: '500px',
               })
+              this.data.getSummary()
             }
           })
         }

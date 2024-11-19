@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
 import { FetchService } from '../fetch/fetch.service'
 import IConv, {
-  ICheckConstrainsts,
+  ICheckConstraints,
   ICreateIndex,
   IForeignKey,
   IInterleaveStatus,
@@ -409,7 +409,7 @@ export class DataService {
       })
     )
   }
-  updateCC(tableId: string, updatedCC: ICheckConstrainsts[]): Observable<string> {
+  updateCC(tableId: string, updatedCC: ICheckConstraints[]): Observable<string> {
     return this.fetch.updateCC(tableId, updatedCC).pipe(
       catchError((e: any) => {
         return of({ error: e.error })

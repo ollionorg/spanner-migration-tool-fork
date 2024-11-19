@@ -4,7 +4,7 @@ import IDbConfig, { IDbConfigs } from 'src/app/model/db-config'
 import ISession, { ISaveSessionPayload } from '../../model/session'
 import IUpdateTable, { IAddColumn, IReviewUpdateTable } from '../../model/update-table'
 import IConv, {
-  ICheckConstrainsts,
+  ICheckConstraints,
   ICreateIndex,
   IForeignKey,
   IInterleaveStatus,
@@ -240,7 +240,7 @@ export class FetchService {
     return this.http.post<HttpResponse<IConv>>(`${this.url}/update/fks?table=${tableId}`, payload)
   }
 
-  updateCC(tableId: string, payload: ICheckConstrainsts[]): any {
+  updateCC(tableId: string, payload: ICheckConstraints[]): any {
     return this.http.post<HttpResponse<IConv>>(`${this.url}/update/cks?table=${tableId}`, payload)
   }
 
