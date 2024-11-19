@@ -537,22 +537,33 @@ func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	defer sessionState.Conv.ConvLock.Unlock()
 
 	sp := sessionState.Conv.SpSchema
-	src := sessionState.Conv.SrcSchema
+	srcschema := sessionState.Conv.SrcSchema
+	// issue := sessionState.Conv.SchemaIssues
 
 	flag := true
 
-	for _, step1 := range src {
+	schemaissue := []internal.SchemaIssue{}
 
-		for _, step := range sp[step1.Id].ColDefs {
+	for _, src := range srcschema {
 
-			if len(sp[step1.Id].CheckConstraint) != 0 && len(src[step1.Id].CheckConstraints) != 0 {
-				spType := step.T.Name
-				srcType := src[step1.Id].ColDefs[step.Id].Type
+		for _, col := range sp[src.Id].ColDefs {
+
+			if len(sp[src.Id].CheckConstraint) != 0 && len(srcschema[src.Id].CheckConstraints) != 0 {
+				spType := col.T.Name
+				srcType := srcschema[src.Id].ColDefs[col.Id].Type
 
 				actualType := mysqlDefaultTypeMap[srcType.Name]
 
 				if actualType.Name != spType {
 					flag = false
+					schemaissue = sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id]
+
+					if !utilities.IsSchemaIssuePresent(schemaissue, internal.TypeMismatch) {
+						schemaissue = append(schemaissue, internal.TypeMismatch)
+					}
+
+					sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id] = schemaissue
+
 					break
 				}
 			}

@@ -30,7 +30,7 @@ import FlatNode from 'src/app/model/schema-object-node'
 import { Subscription, take } from 'rxjs'
 import { MatTabChangeEvent } from '@angular/material/tabs/'
 import IConv, {
-  ICheckConstrainsts,
+  ICheckConstraints,
   ICreateIndex,
   IForeignKey,
   IIndexKey,
@@ -682,7 +682,7 @@ export class ObjectDetailComponent implements OnInit {
   checkIfCkColumn(colId: string) {
     let isCkColumn = false
     let columnName = this.conv.SpSchema[this.currentObject!.id].ColDefs[colId].Name
-    this.conv.SrcSchema[this.currentObject!.id].CheckConstraints.map((ck: ICheckConstrainsts) => {
+    this.conv.SrcSchema[this.currentObject!.id].CheckConstraints.map((ck: ICheckConstraints) => {
       if (ck.Expr.includes(columnName)) {
         isCkColumn = true
       }
@@ -1200,11 +1200,11 @@ export class ObjectDetailComponent implements OnInit {
           spSno: new FormControl(srcArr[i].spSno),
           spConstraintName: new FormControl(srcArr[i].spConstraintName, [
             Validators.required,
-            Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
+            Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
           ]),
           spCondition: new FormControl(srcArr[i].spCondition, [
             Validators.required,
-            this.checkWhere(),
+            this.checkCondition(),
           ]),
           deleteIndex: new FormControl(srcArr[i].deleteIndex),
         })
@@ -1223,7 +1223,7 @@ export class ObjectDetailComponent implements OnInit {
               Validators.required,
               Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
             ]),
-            spCondition: new FormControl('', [Validators.required, this.checkWhere()]),
+            spCondition: new FormControl('', [Validators.required, this.checkCondition()]),
             deleteIndex: new FormControl(srcArr[i].deleteIndex),
           })
         )
@@ -1242,7 +1242,7 @@ export class ObjectDetailComponent implements OnInit {
             ]),
             spCondition: new FormControl(spArr[i].spCondition, [
               Validators.required,
-              this.checkWhere(),
+              this.checkCondition(),
             ]),
             deleteIndex: new FormControl(spArr[i].deleteIndex),
           })
@@ -1252,7 +1252,7 @@ export class ObjectDetailComponent implements OnInit {
     this.ccDataSource = this.ccArray.controls
   }
 
-  checkWhere(): ValidatorFn {
+  checkCondition(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const parser = new Parser()
 
@@ -1379,7 +1379,7 @@ export class ObjectDetailComponent implements OnInit {
   }
 
   saveCc() {
-    let spCkArr: ICheckConstrainsts[] = []
+    let spCkArr: ICheckConstraints[] = []
     let isDuplicate = false
     this.ccArray.value.forEach((cc: ICcTabData) => {
       isDuplicate = spCkArr.some(
