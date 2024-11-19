@@ -2669,7 +2669,12 @@ func TestValidateCheckConstraint_NoTypeMismatch(t *testing.T) {
 	sessionState.Driver = constants.MYSQL
 	sessionState.Conv = internal.MakeConv()
 
-	buildConvMySQL(sessionState.Conv)
+	buildConvMySQL_NoTypeMatch(sessionState.Conv)
+	rr1 := httptest.NewRecorder()
+	req1 := httptest.NewRequest("GET", "/spannerDefaultTypeMap", nil)
+
+	handler1 := http.HandlerFunc(api.SpannerDefaultTypeMap)
+	handler1.ServeHTTP(rr1, req1)
 
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/validateCheckConstraint", nil)
@@ -2688,7 +2693,7 @@ func TestValidateCheckConstraint_TypeMismatch(t *testing.T) {
 	sessionState.Driver = constants.MYSQL
 	sessionState.Conv = internal.MakeConv()
 
-	buildConvMySQL(sessionState.Conv)
+	buildConvMySQL_TypeMatch(sessionState.Conv)
 
 	rr1 := httptest.NewRecorder()
 	req1 := httptest.NewRequest("GET", "/spannerDefaultTypeMap", nil)
@@ -2706,6 +2711,132 @@ func TestValidateCheckConstraint_TypeMismatch(t *testing.T) {
 	var responseFlag bool
 	json.NewDecoder(rr.Body).Decode(&responseFlag)
 	assert.False(t, responseFlag)
-	issues := sessionState.Conv.SchemaIssues["t1"].ColumnLevelIssues["c7"]
+	issues := sessionState.Conv.SchemaIssues["t1"].ColumnLevelIssues["c2"]
 	assert.Contains(t, issues, internal.TypeMismatch)
+}
+
+func buildConvMySQL_NoTypeMatch(conv *internal.Conv) {
+	conv.SrcSchema = map[string]schema.Table{
+		"t1": {
+			Name:   "table1",
+			Id:     "t1",
+			ColIds: []string{"c1", "c2", "c3"},
+			CheckConstraints: []schema.CheckConstraints{
+				{
+					Id:   "ck1",
+					Name: "check_1",
+					Expr: "age > 0",
+				},
+				{
+					Id:   "ck1",
+					Name: "check_2",
+					Expr: "age < 99",
+				},
+			},
+			ColDefs: map[string]schema.Column{
+				"c1": {Name: "a", Id: "c1", Type: schema.Type{Name: "json"}},
+				"c2": {Name: "b", Id: "c2", Type: schema.Type{Name: "decimal"}},
+				"c3": {Name: "c", Id: "c3", Type: schema.Type{Name: "datetime"}},
+			},
+			PrimaryKeys: []schema.Key{{ColId: "c1"}}},
+	}
+	conv.SpSchema = map[string]ddl.CreateTable{
+		"t1": {
+			Name:   "table1",
+			Id:     "t1",
+			ColIds: []string{"c1", "c2", "c3"},
+			CheckConstraint: []ddl.Checkconstraint{
+				{
+					Id:   "ck1",
+					Name: "check_1",
+					Expr: "age > 0",
+				},
+				{
+					Id:   "ck1",
+					Name: "check_2",
+					Expr: "age < 99",
+				},
+			},
+			ColDefs: map[string]ddl.ColumnDef{
+				"c1": {Name: "a", Id: "c1", T: ddl.Type{Name: ddl.JSON}},
+				"c2": {Name: "b", Id: "c2", T: ddl.Type{Name: ddl.Numeric}},
+				"c3": {Name: "c", Id: "c3", T: ddl.Type{Name: ddl.Timestamp}},
+			},
+			PrimaryKeys: []ddl.IndexKey{{ColId: "c1"}},
+		},
+	}
+
+	conv.SchemaIssues = map[string]internal.TableIssues{
+		"t1": {
+			ColumnLevelIssues: map[string][]internal.SchemaIssue{
+				"c1": {internal.Widened},
+				"c2": {internal.Time},
+			},
+		},
+	}
+	conv.SyntheticPKeys["t2"] = internal.SyntheticPKey{"c20", 0}
+	conv.Audit.MigrationType = migration.MigrationData_SCHEMA_AND_DATA.Enum()
+}
+
+func buildConvMySQL_TypeMatch(conv *internal.Conv) {
+	conv.SrcSchema = map[string]schema.Table{
+		"t1": {
+			Name:   "table1",
+			Id:     "t1",
+			ColIds: []string{"c1", "c2", "c3"},
+			CheckConstraints: []schema.CheckConstraints{
+				{
+					Id:   "ck1",
+					Name: "check_1",
+					Expr: "age > 0",
+				},
+				{
+					Id:   "ck1",
+					Name: "check_2",
+					Expr: "age < 99",
+				},
+			},
+			ColDefs: map[string]schema.Column{
+				"c1": {Name: "a", Id: "c1", Type: schema.Type{Name: "json"}},
+				"c2": {Name: "b", Id: "c2", Type: schema.Type{Name: "decimal"}},
+				"c3": {Name: "c", Id: "c3", Type: schema.Type{Name: "datetime"}},
+			},
+			PrimaryKeys: []schema.Key{{ColId: "c1"}}},
+	}
+	conv.SpSchema = map[string]ddl.CreateTable{
+		"t1": {
+			Name:   "table1",
+			Id:     "t1",
+			ColIds: []string{"c1", "c2", "c3"},
+			CheckConstraint: []ddl.Checkconstraint{
+				{
+					Id:   "ck1",
+					Name: "check_1",
+					Expr: "age > 0",
+				},
+				{
+					Id:   "ck1",
+					Name: "check_2",
+					Expr: "age < 99",
+				},
+			},
+			ColDefs: map[string]ddl.ColumnDef{
+				"c1": {Name: "a", Id: "c1", T: ddl.Type{Name: ddl.JSON}},
+				"c2": {Name: "b", Id: "c2", T: ddl.Type{Name: ddl.String}},
+				"c3": {Name: "c", Id: "c3", T: ddl.Type{Name: ddl.Timestamp}},
+			},
+			PrimaryKeys: []ddl.IndexKey{{ColId: "c1"}},
+		},
+	}
+
+	conv.SchemaIssues = map[string]internal.TableIssues{
+		"t1": {
+			ColumnLevelIssues: map[string][]internal.SchemaIssue{
+				"c1": {internal.Widened},
+				"c2": {internal.Time},
+			},
+		},
+	}
+	conv.SyntheticPKeys["t2"] = internal.SyntheticPKey{"c20", 0}
+	conv.Audit.MigrationType = migration.MigrationData_SCHEMA_AND_DATA.Enum()
 }
