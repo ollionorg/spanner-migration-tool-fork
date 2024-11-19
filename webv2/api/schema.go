@@ -488,7 +488,7 @@ func RestoreSecondaryIndex(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// updated the check constraint and check it supported by spanner or not
+// UpdateCheckConstraint processes the request to update spanner table check constraints, ensuring session and schema validity, and responds with the updated conversion metadata.
 func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	tableId := r.FormValue("table")
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -526,7 +526,7 @@ func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// validate the type of column when there is check constraints
+// ValidateCheckConstraint verifies if the type of a database column has been altered and add an error if a change is detected.
 func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	sessionState := session.GetSessionState()
 	if sessionState.Conv == nil || sessionState.Driver == "" {
@@ -538,7 +538,6 @@ func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 
 	sp := sessionState.Conv.SpSchema
 	srcschema := sessionState.Conv.SrcSchema
-	// issue := sessionState.Conv.SchemaIssues
 
 	flag := true
 

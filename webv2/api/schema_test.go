@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,6 +23,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
+
+type errReader struct{}
 
 func init() {
 	logger.Log = zap.NewNop()
@@ -2291,6 +2294,18 @@ func buildConvMySQL(conv *internal.Conv) {
 			Name:   "table1",
 			Id:     "t1",
 			ColIds: []string{"c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16"},
+			CheckConstraints: []schema.CheckConstraints{
+				{
+					Id:   "ck1",
+					Name: "check_1",
+					Expr: "age > 0",
+				},
+				{
+					Id:   "ck1",
+					Name: "check_2",
+					Expr: "age < 99",
+				},
+			},
 			ColDefs: map[string]schema.Column{
 				"c1":  {Name: "a", Id: "c1", Type: schema.Type{Name: "bool"}},
 				"c2":  {Name: "b", Id: "c2", Type: schema.Type{Name: "text"}},
@@ -2325,6 +2340,18 @@ func buildConvMySQL(conv *internal.Conv) {
 			Name:   "table1",
 			Id:     "t1",
 			ColIds: []string{"c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16"},
+			CheckConstraint: []ddl.Checkconstraint{
+				{
+					Id:   "ck1",
+					Name: "check_1",
+					Expr: "age > 0",
+				},
+				{
+					Id:   "ck1",
+					Name: "check_2",
+					Expr: "age < 99",
+				},
+			},
 			ColDefs: map[string]ddl.ColumnDef{
 				"c1":  {Name: "a", Id: "c1", T: ddl.Type{Name: ddl.Bool}},
 				"c2":  {Name: "b", Id: "c2", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}},
@@ -2580,4 +2607,105 @@ func TestUpdateCheckConstraint(t *testing.T) {
 	updatedSp := sessionState.Conv.SpSchema[tableID]
 
 	assert.Equal(t, expectedCheckConstraint, updatedSp.CheckConstraint)
+}
+
+func TestUpdateCheckConstraint_ParseError(t *testing.T) {
+	sessionState := session.GetSessionState()
+	sessionState.Driver = constants.MYSQL
+	sessionState.Conv = internal.MakeConv()
+
+	invalidJSON := "invalid json body"
+
+	rr := httptest.NewRecorder()
+	req, err := http.NewRequest("POST", "update/cks", io.NopCloser(strings.NewReader(invalidJSON)))
+	assert.NoError(t, err)
+
+	handler := http.HandlerFunc(api.UpdateCheckConstraint)
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+	expectedErrorMessage := "Request Body parse error"
+	assert.Contains(t, rr.Body.String(), expectedErrorMessage)
+}
+
+func (errReader) Read(p []byte) (n int, err error) {
+	return 0, fmt.Errorf("simulated read error")
+}
+
+func TestUpdateCheckConstraint_ImproperSession(t *testing.T) {
+	sessionState := session.GetSessionState()
+	sessionState.Conv = nil // Simulate no conversion
+
+	rr := httptest.NewRecorder()
+	req, err := http.NewRequest("POST", "update/cks", io.NopCloser(errReader{}))
+	assert.NoError(t, err)
+
+	handler := http.HandlerFunc(api.UpdateCheckConstraint)
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Schema is not converted or Driver is not configured properly")
+
+}
+
+func TestValidateCheckConstraint_ImproperSession(t *testing.T) {
+	sessionState := session.GetSessionState()
+	sessionState.Conv = nil // Simulate no conversion
+
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/validateCheckConstraint", nil)
+
+	handler := http.HandlerFunc(api.ValidateCheckConstraint)
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Schema is not converted or Driver is not configured properly")
+
+}
+
+func TestValidateCheckConstraint_NoTypeMismatch(t *testing.T) {
+	sessionState := session.GetSessionState()
+	sessionState.Driver = constants.MYSQL
+	sessionState.Conv = internal.MakeConv()
+
+	buildConvMySQL(sessionState.Conv)
+
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/validateCheckConstraint", nil)
+
+	handler := http.HandlerFunc(api.ValidateCheckConstraint)
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var responseFlag bool
+	json.NewDecoder(rr.Body).Decode(&responseFlag)
+	assert.True(t, responseFlag)
+}
+
+func TestValidateCheckConstraint_TypeMismatch(t *testing.T) {
+	sessionState := session.GetSessionState()
+	sessionState.Driver = constants.MYSQL
+	sessionState.Conv = internal.MakeConv()
+
+	buildConvMySQL(sessionState.Conv)
+
+	rr1 := httptest.NewRecorder()
+	req1 := httptest.NewRequest("GET", "/spannerDefaultTypeMap", nil)
+
+	handler1 := http.HandlerFunc(api.SpannerDefaultTypeMap)
+	handler1.ServeHTTP(rr1, req1)
+
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/validateCheckConstraint", nil)
+
+	handler := http.HandlerFunc(api.ValidateCheckConstraint)
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var responseFlag bool
+	json.NewDecoder(rr.Body).Decode(&responseFlag)
+	assert.False(t, responseFlag)
+	issues := sessionState.Conv.SchemaIssues["t1"].ColumnLevelIssues["c7"]
+	assert.Contains(t, issues, internal.TypeMismatch)
 }
