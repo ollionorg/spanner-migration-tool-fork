@@ -526,6 +526,15 @@ func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func doesNameExist(spcks []ddl.Checkconstraint, targetName string) bool {
+	for _, spck := range spcks {
+		if strings.Contains(spck.Expr, targetName) {
+			return true
+		}
+	}
+	return false
+}
+
 // ValidateCheckConstraint verifies if the type of a database column has been altered and add an error if a change is detected.
 func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	sessionState := session.GetSessionState()
@@ -547,23 +556,30 @@ func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 
 		for _, col := range sp[src.Id].ColDefs {
 
-			if len(sp[src.Id].CheckConstraint) != 0 && len(srcschema[src.Id].CheckConstraints) != 0 {
+			if len(sp[src.Id].CheckConstraint) != 0 {
 				spType := col.T.Name
 				srcType := srcschema[src.Id].ColDefs[col.Id].Type
 
 				actualType := mysqlDefaultTypeMap[srcType.Name]
 
 				if actualType.Name != spType {
-					flag = false
-					schemaissue = sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id]
 
-					if !utilities.IsSchemaIssuePresent(schemaissue, internal.TypeMismatch) {
-						schemaissue = append(schemaissue, internal.TypeMismatch)
+					columnName := sp[src.Id].ColDefs[col.Id].Name
+					spcks := sp[src.Id].CheckConstraint
+					if doesNameExist(spcks, columnName) {
+						flag = false
+
+						schemaissue = sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id]
+
+						if !utilities.IsSchemaIssuePresent(schemaissue, internal.TypeMismatch) {
+							schemaissue = append(schemaissue, internal.TypeMismatch)
+						}
+
+						sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id] = schemaissue
+
+						break
+
 					}
-
-					sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id] = schemaissue
-
-					break
 				}
 			}
 
