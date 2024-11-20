@@ -299,23 +299,8 @@ export class ConversionService {
   getCheckConstrainst(tableId: string, data: IConv): ICcTabData[] {
     let srcArr = data.SrcSchema[tableId].CheckConstraints || []
     let spArr = data.SpSchema[tableId].CheckConstraint || []
-
     let res: ICcTabData[] = []
-    let index = 0
-    if (spArr.length == 0) {
-      srcArr.forEach((item) => {
-        index++
-        res.push({
-          srcSno: `${index}`,
-          srcConstraintName: item.Name,
-          srcCondition: item.Expr,
-          spSno: `${index}`,
-          spConstraintName: item.Name,
-          spCondition: item.Expr,
-          deleteIndex: `ck${index}`,
-        })
-      })
-    } else if (srcArr.length > spArr.length) {
+     if (srcArr.length > spArr.length) {
       for (let i = 0; i < srcArr.length; i++) {
         res.push({
           srcSno: `${i + 1}`,
