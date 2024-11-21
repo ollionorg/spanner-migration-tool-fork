@@ -444,10 +444,12 @@ describe('WorkspaceComponent', () => {
       isDeleted: false,
       parent: ''
     };
+    conversionServiceSpy.getCheckConstrainst.withArgs(jasmine.any(String), jasmine.objectContaining<IConv>({})).and.returnValue([])
     conversionServiceSpy.getIndexMapping.withArgs(jasmine.any(String),jasmine.objectContaining<IConv>({}),jasmine.any(String)).and.returnValue([]);
     component.changeCurrentObject(indexNode);
     expect(component.currentObject).toEqual(indexNode);
     expect(component.indexData).toEqual([]);
+    expect(component.ccData).toEqual([])
   });
 
   it('should set currentObject to null when type is neither Table nor Index', () => {

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges } from '@angular/core'
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms'
 import IUpdateTable from '../../model/update-table'
 import { DataService } from 'src/app/services/data/data.service'
 import { MatDialog } from '@angular/material/dialog'
@@ -12,6 +12,7 @@ import FlatNode from 'src/app/model/schema-object-node'
 import { Subscription, take } from 'rxjs'
 import { MatTabChangeEvent } from '@angular/material/tabs/'
 import IConv, {
+  ICheckConstraints,
   ICreateIndex,
   IForeignKey,
   IIndexKey,
@@ -28,6 +29,8 @@ import { linkedFieldsValidatorSequence } from 'src/app/utils/utils';
 import { FetchService } from 'src/app/services/fetch/fetch.service'
 import ICreateSequence from 'src/app/model/auto-gen'
 import { autoGenSupportedDbs } from 'src/app/app.constants'
+import ICcTabData from 'src/app/model/cc-tab-data'
+import { Parser } from 'node-sql-parser'
 
 @Component({
   selector: 'app-object-detail',
@@ -53,6 +56,7 @@ export class ObjectDetailComponent implements OnInit {
   @Input() autoGenMap: any = {}
   @Input() ddlStmts: any = {}
   @Input() fkData: IFkTabData[] = []
+  @Input() ccData: ICcTabData[] = []
   @Input() tableData: IColumnTabData[] = []
   @Input() currentDatabase: string = 'spanner'
   @Input() indexData: IIndexData[] = []
@@ -104,6 +108,15 @@ export class ObjectDetailComponent implements OnInit {
     'spReferColumns',
     'dropButton',
   ]
+  displayedCCColumns = [
+    'srcSno',
+    'srcConstraintName',
+    'srcCondition',
+    'spSno',
+    'spConstraintName',
+    'spCondition',
+    'dropButton',
+  ]
   displayedPkColumns = [
     'srcOrder',
     'srcColName',
@@ -139,6 +152,7 @@ export class ObjectDetailComponent implements OnInit {
   srcDataSource: any = []
   fkDataSource: any = []
   pkDataSource: any = []
+  ccDataSource: any = []
   pkData: IColumnTabData[] = []
   isPkEditMode: boolean = false
   isEditMode: boolean = false
@@ -146,10 +160,12 @@ export class ObjectDetailComponent implements OnInit {
   isIndexEditMode: boolean = false
   isSequenceEditMode: boolean = false
   isObjectSelected: boolean = false
+  isCcEditMode: boolean = false
   srcRowArray: FormArray = this.fb.array([])
   spRowArray: FormArray = this.fb.array([])
   pkArray: FormArray = this.fb.array([])
   fkArray: FormArray = this.fb.array([])
+  ccArray: FormArray = this.fb.array([])
   isSpTableSuggesstionDisplay: boolean[] = []
   spTableSuggestion: string[] = []
   currentTabIndex: number = 0
@@ -177,6 +193,7 @@ export class ObjectDetailComponent implements OnInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     this.fkData = changes['fkData']?.currentValue || this.fkData
+    this.ccData = changes['ccData']?.currentValue || this.ccData
     this.currentObject = changes['currentObject']?.currentValue || this.currentObject
     this.tableData = changes['tableData']?.currentValue || this.tableData
     this.indexData = changes['indexData']?.currentValue || this.indexData
@@ -192,6 +209,7 @@ export class ObjectDetailComponent implements OnInit {
     this.isIndexEditMode = false
     this.isSequenceEditMode = false
     this.isPkEditMode = false
+    this.isCcEditMode = false
     this.srcRowArray = this.fb.array([])
     this.spRowArray = this.fb.array([])
     this.droppedColumns = []
@@ -213,7 +231,7 @@ export class ObjectDetailComponent implements OnInit {
     }
     if (this.foreignKeyActionsSupported && !this.displayedFkColumns.includes('srcOnDelete') ) {
       this.displayedFkColumns.splice(4, 0, 'srcOnDelete', 'srcOnUpdate');
-      this.displayedFkColumns.splice(10, 0, 'spOnDelete', 'spOnUpdate'); 
+      this.displayedFkColumns.splice(10, 0, 'spOnDelete', 'spOnUpdate');
     }
 
     if (this.currentObject?.type === ObjectExplorerNodeType.Table) {
@@ -230,6 +248,7 @@ export class ObjectDetailComponent implements OnInit {
       this.setPkOrder()
       this.setPkRows()
       this.setFkRows()
+      this.setCCRows()
       this.updateSpTableSuggestion()
       this.setShardIdColumn()
       this.processedAutoGenMap = processAutoGens(this.autoGenMap)
@@ -337,7 +356,7 @@ export class ObjectDetailComponent implements OnInit {
         if (droppedColumnSpMaxLength == '' && (droppedColumnSpDataType == 'STRING' || droppedColumnSpDataType == 'BYTES')) {
           droppedColumnSpMaxLength = 'MAX'
         }
-        
+
         this.srcRowArray.push(
           new FormGroup({
             srcOrder: new FormControl(col.srcOrder),
@@ -548,7 +567,38 @@ export class ObjectDetailComponent implements OnInit {
         },
         maxWidth: '500px',
       })
-    } else {
+    } else if ( this.checkIfCkColumn(colId) && (this.checkIfPkColumn(colId) || associatedIndexes.length != 0) ){
+      let pkWarning: string = ''
+      let indexWaring: string = ''
+      let connectingString: string = ''
+      let commnaString: string = ''
+      if (this.checkIfPkColumn(colId)) {
+        pkWarning = ` Primary key`
+      }
+      if (associatedIndexes.length != 0) {
+        indexWaring = ` Index ${associatedIndexes}`
+      }
+      if (pkWarning != '' && indexWaring != '') {
+        connectingString = ` and`
+        commnaString = ` ,`
+      }
+      this.dialog.open(InfodialogComponent, {
+        data: {
+          message: `Column ${spColName} is a part of${pkWarning}${commnaString}${indexWaring}${connectingString} check constrainst. Remove the dependencies from respective tabs before dropping the Column. `,
+          type: 'error',
+        },
+        maxWidth: '500px',
+      })
+    } else if (this.checkIfCkColumn(colId)) {
+      this.dialog.open(InfodialogComponent, {
+        data: {
+          message: `Column ${spColName} is a part of check constrainst. Remove the dependencies from respective tabs before dropping the Column. `,
+          type: 'error',
+        },
+        maxWidth: '500px',
+      })
+    }
+    else {
       this.spRowArray.value.forEach((col: IColumnTabData, i: number) => {
         if (col.spId === spColId) {
           this.droppedColumns.push(col)
@@ -559,6 +609,17 @@ export class ObjectDetailComponent implements OnInit {
         this.droppedSourceColumns.push(srcColName)
       }
     }
+  }
+
+  checkIfCkColumn(colId: string) {
+    let isCkColumn = false
+    let columnName = this.conv.SpSchema[this.currentObject!.id].ColDefs[colId].Name
+    this.conv.SrcSchema[this.currentObject!.id].CheckConstraints.map((ck: ICheckConstraints) => {
+      if (ck.Expr.includes(columnName)) {
+        isCkColumn = true
+      }
+    })
+    return isCkColumn
   }
 
   checkIfPkColumn(colId: string) {
@@ -638,7 +699,7 @@ export class ObjectDetailComponent implements OnInit {
   compareAutoGen(t1: any, t2: any): boolean {
     return t1 && t2 ? t1.Name === t2.Name && t1.GenerationType === t2.GenerationType : t1 === t2;
   }
- 
+
   setPkRows() {
     this.pkArray = this.fb.array([])
     this.pkOrderValidation()
@@ -745,6 +806,188 @@ export class ObjectDetailComponent implements OnInit {
 
   setPkColumn(columnName: string) {
     this.addedPkColumnName = columnName
+  }
+
+  addCcColumn() {
+    let index = this.ccData.length
+    this.ccData.push({
+      spSno: `${index + 1}`,
+      spConstraintName: `Constrainst_name${index + 1}`,
+      spCondition: '',
+      srcSno: '',
+      srcCondition: '',
+      srcConstraintName: '',
+      deleteIndex: `ck${index + 1}`,
+    })
+    this.setCCRows()
+  }
+  dropCc(element: any) {
+    let index = this.ccData.map((item) => item.deleteIndex).indexOf(element.value.deleteIndex)
+    if (index != -1) {
+      this.ccData.splice(index, 1)
+    }
+    this.setCCRows()
+  }
+  setCCRows() {
+    this.ccArray = this.fb.array([])
+    var srcArr = new Array()
+    var spArr = new Array()
+
+    let index = 0
+    this.ccData.forEach((cc) => {
+      index++
+      srcArr.push({
+        srcSno: cc.srcSno,
+        srcConstraintName: cc.srcConstraintName,
+        srcCondition: cc.srcCondition,
+        spSno: `${index}`,
+        spConstraintName: cc.spConstraintName,
+        spCondition: cc.spCondition,
+        deleteIndex: cc.deleteIndex,
+      })
+      if (cc.spConstraintName != '') {
+        spArr.push({
+          srcSno: cc.srcSno,
+          srcConstraintName: cc.srcConstraintName,
+          srcCondition: cc.srcCondition,
+          spSno: `${index}`,
+          spConstraintName: cc.spConstraintName,
+          spCondition: cc.spCondition,
+          deleteIndex: cc.deleteIndex,
+        })
+      }
+    })
+
+    for (let i = 0; i < Math.min(srcArr.length, spArr.length); i++) {
+      this.ccArray.push(
+        new FormGroup({
+          srcSno: new FormControl(srcArr[i].srcSno),
+          srcConstraintName: new FormControl(srcArr[i].srcConstraintName),
+          srcCondition: new FormControl(srcArr[i].srcCondition),
+          spSno: new FormControl(srcArr[i].spSno),
+          spConstraintName: new FormControl(srcArr[i].spConstraintName, [
+            Validators.required,
+            Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
+          ]),
+          spCondition: new FormControl(srcArr[i].spCondition, [
+            Validators.required,
+            this.checkCondition(),
+          ]),
+          deleteIndex: new FormControl(srcArr[i].deleteIndex),
+        })
+      )
+    }
+
+    if (srcArr.length > Math.min(srcArr.length, spArr.length))
+      for (let i = Math.min(srcArr.length, spArr.length); i < srcArr.length; i++) {
+        this.ccArray.push(
+          new FormGroup({
+            srcSno: new FormControl(srcArr[i].srcSno),
+            srcConstraintName: new FormControl(srcArr[i].srcConstraintName),
+            srcCondition: new FormControl(srcArr[i].srcCondition),
+            spSno: new FormControl(''),
+            spConstraintName: new FormControl('', [
+              Validators.required,
+              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
+            ]),
+            spCondition: new FormControl('', [Validators.required, this.checkCondition()]),
+            deleteIndex: new FormControl(srcArr[i].deleteIndex),
+          })
+        )
+      }
+    else if (spArr.length > Math.min(srcArr.length, spArr.length))
+      for (let i = Math.min(srcArr.length, spArr.length); i < spArr.length; i++) {
+        this.ccArray.push(
+          new FormGroup({
+            srcSno: new FormControl(''),
+            srcConstraintName: new FormControl(''),
+            srcCondition: new FormControl(''),
+            spSno: new FormControl(spArr[i].spSno),
+            spConstraintName: new FormControl(spArr[i].spConstraintName, [
+              Validators.required,
+              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
+            ]),
+            spCondition: new FormControl(spArr[i].spCondition, [
+              Validators.required,
+              this.checkCondition(),
+            ]),
+            deleteIndex: new FormControl(spArr[i].deleteIndex),
+          })
+        )
+      }
+
+    this.ccDataSource = this.ccArray.controls
+  }
+
+  checkCondition(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const parser = new Parser()
+
+      const sql = `
+      ALTER TABLE employees
+      ADD CONSTRAINT chk_age4
+      CHECK ${control.value};
+        `
+
+      try {
+        const ast = parser.astify(sql)
+        return null
+      } catch (error) {
+        return { error }
+      }
+    }
+  }
+
+  toggleCcEdit() {
+    this.currentTabIndex = 3
+    if (this.isCcEditMode) {
+      this.setCCRows()
+      this.isCcEditMode = false
+    } else {
+      this.currentTabIndex = 3
+      this.isCcEditMode = true
+    }
+  }
+
+  saveCc() {
+    let spCkArr: ICheckConstraints[] = []
+    let isDuplicate = false
+    this.ccArray.value.forEach((cc: ICcTabData) => {
+      isDuplicate = spCkArr.some(
+        (item) => item.Name === cc.spConstraintName || item.Expr === cc.spCondition
+      )
+
+      if (!isDuplicate)
+        spCkArr.push({
+          Id: cc.spSno,
+          Name: cc.spConstraintName,
+          Expr: cc.spCondition,
+        })
+      return
+    })
+    if (isDuplicate) {
+      this.dialog.open(InfodialogComponent, {
+        data: {
+          message: `Check constraint name and Condition is Duplicate. Remove the dependencies from respective row before saving the Column Data. `,
+          type: 'error',
+        },
+        maxWidth: '500px',
+      })
+      return
+    }
+
+    this.data.updateCC(this.currentObject!.id, spCkArr).subscribe({
+      next: (res: string) => {
+        if (res == '') {
+          this.isCcEditMode = false
+        } else {
+          this.dialog.open(InfodialogComponent, {
+            data: { message: res, type: 'error' },
+            maxWidth: '500px',
+          })
+        }
+      },
+    })
   }
 
   addPkColumn() {
@@ -1143,7 +1386,7 @@ export class ObjectDetailComponent implements OnInit {
         fk.spColIds = []
         fk.spReferColumnIds = []
         fk.spReferTableId = ''
-        fk.spOnDelete = '' 
+        fk.spOnDelete = ''
         fk.spOnUpdate = ''
       }
     })
