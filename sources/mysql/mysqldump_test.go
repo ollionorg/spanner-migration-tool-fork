@@ -939,6 +939,67 @@ func runProcessMySQLDump(s string) (*internal.Conv, []spannerData) {
 	return conv, rows
 }
 
+func TestCheckConstraint(t *testing.T) {
+	cases := []struct {
+		name           string
+		input          string
+		expectedSchema map[string]ddl.CreateTable
+	}{
+		{
+			name: "orders",
+			input: `CREATE TABLE orders (
+		order_id int NOT NULL,
+		total_amount decimal(10,2) NOT NULL,
+		order_status enum('pending','completed','cancelled') DEFAULT 'pending',
+		PRIMARY KEY (order_id),
+		CONSTRAINT orders_chk_1 CHECK ((total_amount >= 0)),
+		CONSTRAINT orders_chk_2 CHECK (((order_status = 'completed' and total_amount > 0) or (order_status <> 'completed')))
+		);
+		`,
+			expectedSchema: map[string]ddl.CreateTable{
+				"t1": ddl.CreateTable{
+					Name:   "orders",
+					ColIds: []string{"c2", "c3", "c4"},
+					ColDefs: map[string]ddl.ColumnDef{
+						"c2": ddl.ColumnDef{Name: "order_id", T: ddl.Type{Name: ddl.Int64}},
+						"c3": ddl.ColumnDef{Name: "total_amount", T: ddl.Type{Name: ddl.Numeric, Len: ddl.MaxLength}},
+						"c4": ddl.ColumnDef{Name: "order_status", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}},
+					},
+					CheckConstraint: []ddl.Checkconstraint{{Id: "ck1", Name: "orders_chk_1", Expr: "(`total_amount`>=0)"}, {Id: "ck1", Name: "orders_chk_2", Expr: "((`order_status`='completed' AND `total_amount`>0) OR (`order_status`!='completed'))"}},
+				},
+			},
+		},
+		{
+			name: "orders",
+			input: `CREATE TABLE orders (
+		order_id int NOT NULL,
+		total_amount decimal(10,2) NOT NULL,
+		order_status enum('pending','completed','cancelled') DEFAULT 'pending',
+		PRIMARY KEY (order_id),
+		);
+		`,
+			expectedSchema: map[string]ddl.CreateTable{
+				"t1": ddl.CreateTable{
+					Name:   "orders",
+					ColIds: []string{"c2", "c3", "c4"},
+					ColDefs: map[string]ddl.ColumnDef{
+						"c2": ddl.ColumnDef{Name: "order_id", T: ddl.Type{Name: ddl.Int64}},
+						"c3": ddl.ColumnDef{Name: "total_amount", T: ddl.Type{Name: ddl.Numeric, Len: ddl.MaxLength}},
+						"c4": ddl.ColumnDef{Name: "order_status", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}},
+					},
+					CheckConstraint: nil,
+				},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			conv, _ := runProcessMySQLDump(tc.input)
+			assert.Equal(t, tc.expectedSchema["t1"].CheckConstraint, conv.SpSchema["t1"].CheckConstraint)
+		})
+	}
+}
+
 // noIssues verifies that conversion was issue-free by checking that conv
 // contains no unexpected conditions, statement errors, etc. Note that
 // many tests are issue-free, but several explicitly test handling of
