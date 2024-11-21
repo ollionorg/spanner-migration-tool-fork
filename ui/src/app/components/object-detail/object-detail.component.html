@@ -789,13 +789,6 @@
             <th class="table_header" mat-header-cell *matHeaderCellDef>Condition</th>
             <td mat-cell *matCellDef="let element" >
               <div *ngIf="isCcEditMode">
-                <!-- <input
-                  matInput
-                  class="name_input"
-                  type="text"
-                  [formControl]="element.get('spCondition')"
-                  matTooltip="Enter valid clause for CHECK constraints"
-                   /> -->
                    <textarea name="spConstraintName"  matInput
                    class="name_input" [formControl]="element.get('spCondition')"
                    matTooltip="Enter valid clause for CHECK constraints" id="ck1"></textarea>
