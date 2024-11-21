@@ -91,13 +91,21 @@ func WriteSessionFile(conv *internal.Conv, name string, out *os.File) {
 		fmt.Fprintf(out, "Can't create session file %s: %v\n", name, err)
 		return
 	}
+
+	encoder := json.NewEncoder(f)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", " ")
+
+	convEncoded := encoder.Encode(conv)
+
 	// Session file will basically contain 'conv' struct in JSON format.
 	// It contains all the information for schema and data conversion state.
-	convJSON, err := json.MarshalIndent(conv, "", " ")
+	convJSON, err := json.MarshalIndent(convEncoded, "", " ")
 	if err != nil {
 		fmt.Fprintf(out, "Can't encode session state to JSON: %v\n", err)
 		return
 	}
+
 	if _, err := f.Write(convJSON); err != nil {
 		fmt.Fprintf(out, "Can't write out session file: %v\n", err)
 		return
