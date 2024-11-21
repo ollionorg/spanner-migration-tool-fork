@@ -305,8 +305,6 @@ func processCreateTable(conv *internal.Conv, stmt *ast.CreateTableStmt) {
 func processConstraint(conv *internal.Conv, tableId string, constraint *ast.Constraint, stmtType string, colNameToIdMap map[string]string) {
 	st := conv.SrcSchema[tableId]
 	switch ct := constraint.Tp; ct {
-	// case ast.ConstraintCheck:
-	// 	st.CheckConstraints = toCheckConstraints(constraint)
 	case ast.ConstraintPrimaryKey:
 		checkEmpty(conv, st.PrimaryKeys, stmtType) // Drop any previous primary keys.
 		st.PrimaryKeys = toSchemaKeys(constraint.Keys, colNameToIdMap)
