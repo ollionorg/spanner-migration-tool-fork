@@ -247,7 +247,8 @@ func cvtCheckContraint(conv *internal.Conv, srcKeys []schema.CheckConstraints) [
 		})
 
 	}
-	return spcks
+
+	return internal.GetSpannerValidExpression(spcks)
 }
 func CvtForeignKeysHelper(conv *internal.Conv, spTableName string, srcTableId string, srcKey schema.ForeignKey, isRestore bool) (ddl.Foreignkey, error) {
 	if len(srcKey.ColIds) != len(srcKey.ReferColumnIds) {
