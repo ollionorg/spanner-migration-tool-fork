@@ -2798,7 +2798,7 @@ func buildConvMySQL_TypeMatch(conv *internal.Conv) {
 			},
 			ColDefs: map[string]schema.Column{
 				"c1": {Name: "a", Id: "c1", Type: schema.Type{Name: "json"}},
-				"c2": {Name: "b", Id: "c2", Type: schema.Type{Name: "decimal"}},
+				"c2": {Name: "age", Id: "c2", Type: schema.Type{Name: "decimal"}},
 				"c3": {Name: "c", Id: "c3", Type: schema.Type{Name: "datetime"}},
 			},
 			PrimaryKeys: []schema.Key{{ColId: "c1"}}},
@@ -2822,7 +2822,7 @@ func buildConvMySQL_TypeMatch(conv *internal.Conv) {
 			},
 			ColDefs: map[string]ddl.ColumnDef{
 				"c1": {Name: "a", Id: "c1", T: ddl.Type{Name: ddl.JSON}},
-				"c2": {Name: "b", Id: "c2", T: ddl.Type{Name: ddl.String}},
+				"c2": {Name: "age", Id: "c2", T: ddl.Type{Name: ddl.String}},
 				"c3": {Name: "c", Id: "c3", T: ddl.Type{Name: ddl.Timestamp}},
 			},
 			PrimaryKeys: []ddl.IndexKey{{ColId: "c1"}},
