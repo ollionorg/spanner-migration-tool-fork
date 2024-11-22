@@ -338,7 +338,7 @@ func toCheckConstraints(ckArray []*ast.Constraint) (cks []schema.CheckConstraint
 			checkConstraint := schema.CheckConstraints{
 				Name: ck.Name,
 				Expr: exp,
-				Id:   "ck1",
+				Id:   internal.GenerateCheckConstrainstId(),
 			}
 			cks = append(cks, checkConstraint)
 		}
