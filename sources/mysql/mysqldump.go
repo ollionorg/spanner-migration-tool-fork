@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/sources/common"
 	"github.com/pingcap/tidb/parser"
 	"github.com/pingcap/tidb/parser/ast"
+	"github.com/pingcap/tidb/parser/format"
 	"github.com/pingcap/tidb/parser/opcode"
 	"github.com/pingcap/tidb/types"
 	driver "github.com/pingcap/tidb/types/parser_driver"
@@ -282,16 +283,19 @@ func processCreateTable(conv *internal.Conv, stmt *ast.CreateTableStmt) {
 			})
 		}
 	}
+	CheckConstraints := toCheckConstraints(stmt.Constraints)
+
 	conv.SchemaStatement(NodeType(stmt))
 	conv.SrcSchema[tableId] = schema.Table{
-		Id:           tableId,
-		Name:         tableName,
-		ColIds:       colIds,
-		ColNameIdMap: colNameIdMap,
-		ColDefs:      colDef,
-		PrimaryKeys:  keys,
-		ForeignKeys:  fkeys,
-		Indexes:      index}
+		Id:               tableId,
+		Name:             tableName,
+		ColIds:           colIds,
+		ColNameIdMap:     colNameIdMap,
+		CheckConstraints: CheckConstraints,
+		ColDefs:          colDef,
+		PrimaryKeys:      keys,
+		ForeignKeys:      fkeys,
+		Indexes:          index}
 	for _, constraint := range stmt.Constraints {
 		processConstraint(conv, tableId, constraint, "CREATE TABLE", conv.SrcSchema[tableId].ColNameIdMap)
 	}
@@ -323,6 +327,33 @@ func processConstraint(conv *internal.Conv, tableId string, constraint *ast.Cons
 		updateCols(conv, ct, constraint.Keys, st.ColDefs, colNameToIdMap)
 	}
 	conv.SrcSchema[tableId] = st
+}
+
+func toCheckConstraints(ckArray []*ast.Constraint) (cks []schema.CheckConstraints) {
+	for _, ck := range ckArray {
+		if ck.Tp == ast.ConstraintCheck {
+			exp := expressionToString(ck.Expr)
+			exp = strings.ReplaceAll(exp, "_UTF8MB4", "")
+			checkConstraint := schema.CheckConstraints{
+				Name: ck.Name,
+				Expr: exp,
+				Id:   internal.GenerateCheckConstrainstId(),
+			}
+			cks = append(cks, checkConstraint)
+		}
+	}
+	return cks
+}
+
+// converts an AST expression node to its string representation.
+func expressionToString(expr ast.Node) string {
+	var sb strings.Builder
+	restoreCtx := format.NewRestoreCtx(format.DefaultRestoreFlags, &sb)
+	if err := expr.Restore(restoreCtx); err != nil {
+		fmt.Errorf("Error restoring expression: %v\n", err)
+		return ""
+	}
+	return sb.String()
 }
 
 // toSchemaKeys converts a string list of MySQL keys to schema keys.
