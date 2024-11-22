@@ -999,7 +999,7 @@ func TestCheckConstraint(t *testing.T) {
 						"c3": ddl.ColumnDef{Name: "total_amount", T: ddl.Type{Name: ddl.Numeric, Len: ddl.MaxLength}},
 						"c4": ddl.ColumnDef{Name: "order_status", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}},
 					},
-					CheckConstraint: []ddl.Checkconstraint{{Id: "ck1", Name: "orders_chk_1", Expr: "(`total_amount`>=0)"}, {Id: "ck1", Name: "orders_chk_2", Expr: "((`order_status`='completed' AND `total_amount`>0) OR (`order_status`!='completed'))"}},
+					CheckConstraint: []ddl.CheckConstraints{{Id: "ck1", Name: "orders_chk_1", Expr: "(`total_amount`>=0)"}, {Id: "ck1", Name: "orders_chk_2", Expr: "((`order_status`='completed' AND `total_amount`>0) OR (`order_status`!='completed'))"}},
 				},
 			},
 		},
