@@ -10,14 +10,21 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
+# limitations under the License. test
+name: code-coverage-check
 
 on:
   push:
     branches:
-      - master
+      - test
+    # paths:
+    #   - '.github/workflows/test-coverage.yaml'
   pull_request:
-name: code-coverage-check
+    branches:
+      - master 
+    # paths:
+    #   - '.github/workflows/test-coverage.yaml'   
+  workflow_dispatch:     
 jobs:
   coverage:
     runs-on: ubuntu-latest
