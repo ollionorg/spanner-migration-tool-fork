@@ -133,7 +133,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
       }
       if (this.currentObject && this.currentObject.type === ObjectExplorerNodeType.Table) {
         this.ccData = this.currentObject
-          ? this.conversion.getCheckConstrainst(this.currentObject.id, data)
+          ? this.conversion.getCheckConstraints(this.currentObject.id, data)
           : []
 
         this.fkData = this.currentObject
@@ -226,7 +226,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     if (object.type === ObjectExplorerNodeType.Table) {
       this.currentObject = object
       this.tableData = this.conversion.getColumnMapping(this.currentObject.id, this.conv)
-      this.ccData = this.conversion.getCheckConstrainst(this.currentObject.id, this.conv)
+      this.ccData = this.conversion.getCheckConstraints(this.currentObject.id, this.conv)
 
       this.fkData = []
       this.fkData =  this.conversion.getFkMapping(this.currentObject.id, this.conv)

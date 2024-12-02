@@ -70,7 +70,8 @@ describe('WorkspaceComponent', () => {
       'getColumnMapping',
       'getIndexMapping',
       'createTreeNode',
-      'createTreeNodeForSource'
+      'createTreeNodeForSource',
+      'getCheckConstraints'
     ]);
     dataServiceSpy = jasmine.createSpyObj('DataService', [
       'getRateTypemapAndSummary',
@@ -444,7 +445,7 @@ describe('WorkspaceComponent', () => {
       isDeleted: false,
       parent: ''
     };
-    conversionServiceSpy.getCheckConstrainst.withArgs(jasmine.any(String), jasmine.objectContaining<IConv>({})).and.returnValue([])
+    conversionServiceSpy.getCheckConstraints.withArgs(jasmine.any(String), jasmine.objectContaining<IConv>({})).and.returnValue([])
     conversionServiceSpy.getIndexMapping.withArgs(jasmine.any(String),jasmine.objectContaining<IConv>({}),jasmine.any(String)).and.returnValue([]);
     component.changeCurrentObject(indexNode);
     expect(component.currentObject).toEqual(indexNode);

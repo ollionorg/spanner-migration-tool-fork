@@ -215,7 +215,7 @@ export class FetchService {
   }
 
   updateCC(tableId: string, payload: ICheckConstraints[]): any {
-    return this.http.post<HttpResponse<IConv>>(`${this.url}/update/cks?table=${tableId}`, payload)
+    return this.http.post<HttpResponse<IConv>>(`${this.url}/update/cc?table=${tableId}`, payload)
   }
 
   restoreTable(tableId: string) {

@@ -284,7 +284,7 @@ export class ConversionService {
     ]
   }
 
-  getCheckConstrainst(tableId: string, data: IConv): ICcTabData[] {
+  getCheckConstraints(tableId: string, data: IConv): ICcTabData[] {
     let srcArr = data.SrcSchema[tableId].CheckConstraints || []
     let spArr = data.SpSchema[tableId].CheckConstraints || []
     let res: ICcTabData[] = []
@@ -297,7 +297,7 @@ export class ConversionService {
           spSno: spArr[i] ? `${i + 1}` : '',
           spConstraintName: spArr[i] ? spArr[i].Name : '',
           spCondition: spArr[i] ? spArr[i].Expr : '',
-          deleteIndex: `ck${i + 1}`,
+          deleteIndex: `cc${i + 1}`,
         })
       }
     } else {
@@ -309,7 +309,7 @@ export class ConversionService {
           spSno: `${i + 1}`,
           spConstraintName: spArr[i].Name,
           spCondition: spArr[i].Expr,
-          deleteIndex: `ck${i + 1}`,
+          deleteIndex: `cc${i + 1}`,
         })
       }
     }

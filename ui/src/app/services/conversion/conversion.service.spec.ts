@@ -112,7 +112,7 @@ describe('ConversionService', () => {
     });
   });
 
-  it('getCheckConstrainst when src has more data then spanner', () => {
+  it('getCheckConstraints when src has more data then spanner', () => {
     let conv: IConv = {} as IConv
     conv.SrcSchema = {
       t1: {
@@ -156,7 +156,7 @@ describe('ConversionService', () => {
         spSno: '1',
         spConstraintName: 'Name1',
         spCondition: 'Expr1',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
       {
         srcSno: '2',
@@ -165,15 +165,15 @@ describe('ConversionService', () => {
         spSno: '',
         spConstraintName: '',
         spCondition: '',
-        deleteIndex: 'ck2',
+        deleteIndex: 'cc2',
       },
     ]
 
-    const result = service.getCheckConstrainst('t1', conv)
+    const result = service.getCheckConstraints('t1', conv)
     expect(result).toEqual(expected)
   })
 
-  it('getCheckConstrainst when spanner is empty', () => {
+  it('getCheckConstraints when spanner is empty', () => {
     let conv: IConv = {} as IConv
     conv.SrcSchema = {
       t1: {
@@ -214,27 +214,27 @@ describe('ConversionService', () => {
         srcSno: '1',
         srcConstraintName: 'Name1',
         srcCondition: 'Expr1',
-        spSno: '1',
-        spConstraintName: 'Name1',
-        spCondition: 'Expr1',
-        deleteIndex: 'ck1',
+        spSno: '',
+        spConstraintName: '',
+        spCondition: '',
+        deleteIndex: 'cc1',
       },
       {
         srcSno: '2',
         srcConstraintName: 'Name2',
         srcCondition: 'Expr2',
-        spSno: '2',
-        spConstraintName: 'Name2',
-        spCondition: 'Expr2',
-        deleteIndex: 'ck2',
+        spSno: '',
+        spConstraintName: '',
+        spCondition: '',
+        deleteIndex: 'cc2',
       },
-    ]
+    ];
 
-    const result = service.getCheckConstrainst('t1', conv)
+    const result = service.getCheckConstraints('t1', conv)
     expect(result).toEqual(expected)
   })
 
-  it('getCheckConstrainst when src is less than spanner', () => {
+  it('getCheckConstraints when src is less than spanner', () => {
     let conv: IConv = {} as IConv
     conv.SrcSchema = {
       t1: {
@@ -278,7 +278,7 @@ describe('ConversionService', () => {
         spSno: '1',
         spConstraintName: 'Name1',
         spCondition: 'Expr1',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
       {
         srcSno: '',
@@ -287,11 +287,11 @@ describe('ConversionService', () => {
         spSno: '2',
         spConstraintName: 'Name2',
         spCondition: 'Expr2',
-        deleteIndex: 'ck2',
+        deleteIndex: 'cc2',
       },
     ]
 
-    const result = service.getCheckConstrainst('t1', conv)
+    const result = service.getCheckConstraints('t1', conv)
     expect(result).toEqual(expected)
   })
 });

@@ -398,20 +398,21 @@ export class DataService {
 
   updateCC(tableId: string, updatedCC: ICheckConstraints[]): Observable<string> {
     return this.fetch.updateCC(tableId, updatedCC).pipe(
-      catchError((e: any) => {
-        return of({ error: e.error })
+      catchError((error: any) => {
+        console.error('Error updating check constraints:', error);
+        return of(`Error: ${error.message || 'Unknown error'}`);
       }),
-      tap(console.log),
-      map((data: any) => {
-        if (data.error) {
-          return data.error
+      tap(response => console.log('Update Response:', response)),
+      map((response: any) => {
+        if (response.error) {
+          return `Error: ${response.error}`; // Ensure error is stringified for consistent return type
         } else {
-          this.convSubject.next(data)
-          this.getDdl()
-          return ''
+          this.convSubject.next(response);
+          this.getDdl();
+          return ''; // Indicates success
         }
       })
-    )
+    );
   }
 
   updateFkNames(tableId: string, updatedFk: IForeignKey[]): Observable<string> {

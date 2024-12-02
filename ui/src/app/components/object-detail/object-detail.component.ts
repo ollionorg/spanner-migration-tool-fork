@@ -567,36 +567,30 @@ export class ObjectDetailComponent implements OnInit {
         },
         maxWidth: '500px',
       })
-    } else if ( this.checkIfCkColumn(colId) && (this.checkIfPkColumn(colId) || associatedIndexes.length != 0) ){
-      let pkWarning: string = ''
-      let indexWaring: string = ''
-      let connectingString: string = ''
-      let commnaString: string = ''
+    } else if (this.checkIfCcColumn(colId)) {
+      let message = `Column ${spColName} is a part of`;
+      const dependencies = [];
+    
       if (this.checkIfPkColumn(colId)) {
-        pkWarning = ` Primary key`
+        dependencies.push(' Primary key');
       }
-      if (associatedIndexes.length != 0) {
-        indexWaring = ` Index ${associatedIndexes}`
+      if (associatedIndexes.length !== 0) {
+        dependencies.push(` Index ${associatedIndexes}`);
       }
-      if (pkWarning != '' && indexWaring != '') {
-        connectingString = ` and`
-        commnaString = ` ,`
+    
+      // Join dependencies with appropriate punctuation
+      if (dependencies.length > 0) {
+        message += `${dependencies.join(' ,')} and`;
       }
+      message += ' check constraints. Remove the dependencies from respective tabs before dropping the Column.';
+    
       this.dialog.open(InfodialogComponent, {
         data: {
-          message: `Column ${spColName} is a part of${pkWarning}${commnaString}${indexWaring}${connectingString} check constrainst. Remove the dependencies from respective tabs before dropping the Column. `,
+          message,
           type: 'error',
         },
         maxWidth: '500px',
-      })
-    } else if (this.checkIfCkColumn(colId)) {
-      this.dialog.open(InfodialogComponent, {
-        data: {
-          message: `Column ${spColName} is a part of check constrainst. Remove the dependencies from respective tabs before dropping the Column. `,
-          type: 'error',
-        },
-        maxWidth: '500px',
-      })
+      });
     }
     else {
       this.spRowArray.value.forEach((col: IColumnTabData, i: number) => {
@@ -611,15 +605,12 @@ export class ObjectDetailComponent implements OnInit {
     }
   }
 
-  checkIfCkColumn(colId: string) {
-    let isCkColumn = false
-    let columnName = this.conv.SpSchema[this.currentObject!.id].ColDefs[colId].Name
-    this.conv.SrcSchema[this.currentObject!.id].CheckConstraints.map((ck: ICheckConstraints) => {
-      if (ck.Expr.includes(columnName)) {
-        isCkColumn = true
-      }
-    })
-    return isCkColumn
+  checkIfCcColumn(colId: string): boolean {
+    const columnName = this.conv.SpSchema[this.currentObject!.id].ColDefs[colId].Name;
+    
+    return this.conv.SrcSchema[this.currentObject!.id].CheckConstraints.some((cc: ICheckConstraints) => 
+      cc.Expr.includes(columnName)
+    );
   }
 
   checkIfPkColumn(colId: string) {
@@ -809,185 +800,156 @@ export class ObjectDetailComponent implements OnInit {
   }
 
   addCcColumn() {
-    let index = this.ccData.length
+    const index = this.ccData.length;
+  
     this.ccData.push({
-      spSno: `${index + 1}`,
-      spConstraintName: `Constrainst_name${index + 1}`,
+      spSno: (index + 1).toString(),
+      spConstraintName: `Constraint_name${index + 1}`,
       spCondition: '',
       srcSno: '',
       srcCondition: '',
       srcConstraintName: '',
-      deleteIndex: `ck${index + 1}`,
-    })
-    this.setCCRows()
+      deleteIndex: `cc${index + 1}`,
+    });
+  
+    this.setCCRows();
   }
+    
   dropCc(element: any) {
-    let index = this.ccData.map((item) => item.deleteIndex).indexOf(element.value.deleteIndex)
-    if (index != -1) {
-      this.ccData.splice(index, 1)
+    const index = this.ccData.findIndex(item => item.deleteIndex === element.value.deleteIndex);
+    if (index !== -1) {
+      this.ccData.splice(index, 1);
     }
-    this.setCCRows()
+    this.setCCRows();
   }
-  setCCRows() {
-    this.ccArray = this.fb.array([])
-    var srcArr = new Array()
-    var spArr = new Array()
 
-    let index = 0
-    this.ccData.forEach((cc) => {
-      index++
-      srcArr.push({
+  setCCRows() {
+    this.ccArray = this.fb.array([]);
+    const srcArr: ICcTabData[] = [];
+    const spArr: ICcTabData[] = [];
+  
+    // Populate srcArr and spArr
+    this.ccData.forEach((cc, index) => {
+      const baseObject : ICcTabData = {
         srcSno: cc.srcSno,
         srcConstraintName: cc.srcConstraintName,
         srcCondition: cc.srcCondition,
-        spSno: `${index}`,
+        spSno: `${index + 1}`,
         spConstraintName: cc.spConstraintName,
         spCondition: cc.spCondition,
         deleteIndex: cc.deleteIndex,
-      })
-      if (cc.spConstraintName != '') {
-        spArr.push({
-          srcSno: cc.srcSno,
-          srcConstraintName: cc.srcConstraintName,
-          srcCondition: cc.srcCondition,
-          spSno: `${index}`,
-          spConstraintName: cc.spConstraintName,
-          spCondition: cc.spCondition,
-          deleteIndex: cc.deleteIndex,
-        })
+      };
+      srcArr.push(baseObject);
+  
+      if (cc.spConstraintName !== '') {
+        spArr.push(baseObject);
       }
-    })
+    });
+  
+    const createFormGroup = (data : ICcTabData) => new FormGroup({
+      srcSno: new FormControl(data.srcSno || ''),
+      srcConstraintName: new FormControl(data.srcConstraintName || ''),
+      srcCondition: new FormControl(data.srcCondition || ''),
+      spSno: new FormControl(data.spSno || ''),
+      spConstraintName: new FormControl(data.spConstraintName || '', [
+        Validators.required,
+        Validators.pattern('^[a-zA-Z_][a-zA-Z0-9/_]*[a-zA-Z0-9]?'),
+      ]),
+      spCondition: new FormControl(data.spCondition || '', [
+        Validators.required,
+        this.checkCondition(),
+      ]),
+      deleteIndex: new FormControl(data.deleteIndex),
+    });
 
     for (let i = 0; i < Math.min(srcArr.length, spArr.length); i++) {
-      this.ccArray.push(
-        new FormGroup({
-          srcSno: new FormControl(srcArr[i].srcSno),
-          srcConstraintName: new FormControl(srcArr[i].srcConstraintName),
-          srcCondition: new FormControl(srcArr[i].srcCondition),
-          spSno: new FormControl(srcArr[i].spSno),
-          spConstraintName: new FormControl(srcArr[i].spConstraintName, [
-            Validators.required,
-            Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
-          ]),
-          spCondition: new FormControl(srcArr[i].spCondition, [
-            Validators.required,
-            this.checkCondition(),
-          ]),
-          deleteIndex: new FormControl(srcArr[i].deleteIndex),
-        })
-      )
+      this.ccArray.push(createFormGroup(srcArr[i]));
+    }
+  
+    for (let i = Math.min(srcArr.length, spArr.length); i < srcArr.length; i++) {
+      this.ccArray.push(createFormGroup(srcArr[i]));
     }
 
-    if (srcArr.length > Math.min(srcArr.length, spArr.length))
-      for (let i = Math.min(srcArr.length, spArr.length); i < srcArr.length; i++) {
-        this.ccArray.push(
-          new FormGroup({
-            srcSno: new FormControl(srcArr[i].srcSno),
-            srcConstraintName: new FormControl(srcArr[i].srcConstraintName),
-            srcCondition: new FormControl(srcArr[i].srcCondition),
-            spSno: new FormControl(''),
-            spConstraintName: new FormControl('', [
-              Validators.required,
-              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
-            ]),
-            spCondition: new FormControl('', [Validators.required, this.checkCondition()]),
-            deleteIndex: new FormControl(srcArr[i].deleteIndex),
-          })
-        )
-      }
-    else if (spArr.length > Math.min(srcArr.length, spArr.length))
-      for (let i = Math.min(srcArr.length, spArr.length); i < spArr.length; i++) {
-        this.ccArray.push(
-          new FormGroup({
-            srcSno: new FormControl(''),
-            srcConstraintName: new FormControl(''),
-            srcCondition: new FormControl(''),
-            spSno: new FormControl(spArr[i].spSno),
-            spConstraintName: new FormControl(spArr[i].spConstraintName, [
-              Validators.required,
-              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
-            ]),
-            spCondition: new FormControl(spArr[i].spCondition, [
-              Validators.required,
-              this.checkCondition(),
-            ]),
-            deleteIndex: new FormControl(spArr[i].deleteIndex),
-          })
-        )
-      }
-
-    this.ccDataSource = this.ccArray.controls
+    for (let i = Math.min(srcArr.length, spArr.length); i < spArr.length; i++) {
+      this.ccArray.push(createFormGroup(spArr[i]));
+    }
+  
+    this.ccDataSource = this.ccArray.controls;
   }
 
   checkCondition(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      const parser = new Parser()
-
+      const parser = new Parser();
       const sql = `
-      ALTER TABLE employees
-      ADD CONSTRAINT chk_age4
-      CHECK ${control.value};
-        `
-
+        ALTER TABLE employees
+        ADD CONSTRAINT chk_age4
+        CHECK (${control.value});
+      `;
+  
       try {
-        const ast = parser.astify(sql)
-        return null
+        const ast = parser.astify(sql);
+        return null;
       } catch (error) {
-        return { error }
+        return { syntaxError: 'Invalid SQL syntax or condition' };
       }
     }
   }
 
   toggleCcEdit() {
-    this.currentTabIndex = 3
+    this.currentTabIndex = 3;
+
     if (this.isCcEditMode) {
-      this.setCCRows()
-      this.isCcEditMode = false
-    } else {
-      this.currentTabIndex = 3
-      this.isCcEditMode = true
+      this.setCCRows();
     }
+  
+    this.isCcEditMode = !this.isCcEditMode;
   }
 
   saveCc() {
-    let spCkArr: ICheckConstraints[] = []
-    let isDuplicate = false
+    const spCkArr: ICheckConstraints[] = [];
+    let isDuplicate = false;
+  
     this.ccArray.value.forEach((cc: ICcTabData) => {
-      isDuplicate = spCkArr.some(
-        (item) => item.Name === cc.spConstraintName || item.Expr === cc.spCondition
-      )
-
-      if (!isDuplicate)
+      if (spCkArr.some(item => item.Name === cc.spConstraintName || item.Expr === cc.spCondition)) {
+        isDuplicate = true;
+      } else {
         spCkArr.push({
           Id: cc.spSno,
           Name: cc.spConstraintName,
           Expr: cc.spCondition,
-        })
-      return
-    })
+        });
+      }
+    });
+  
     if (isDuplicate) {
       this.dialog.open(InfodialogComponent, {
         data: {
-          message: `Check constraint name and Condition is Duplicate. Remove the dependencies from respective row before saving the Column Data. `,
+          message: "Check constraint name or condition is duplicate. Remove the dependencies from the respective row before saving the column data.",
           type: 'error',
         },
         maxWidth: '500px',
-      })
-      return
+      });
+      return;
     }
-
+  
     this.data.updateCC(this.currentObject!.id, spCkArr).subscribe({
       next: (res: string) => {
-        if (res == '') {
-          this.isCcEditMode = false
+        if (res === '') {
+          this.isCcEditMode = false;
         } else {
           this.dialog.open(InfodialogComponent, {
             data: { message: res, type: 'error' },
             maxWidth: '500px',
-          })
+          });
         }
       },
-    })
+      error: (err: any) => {
+        this.dialog.open(InfodialogComponent, {
+          data: { message: 'An error occurred while updating constraints.', type: 'error' },
+          maxWidth: '500px',
+        });
+      }
+    });
   }
 
   addPkColumn() {

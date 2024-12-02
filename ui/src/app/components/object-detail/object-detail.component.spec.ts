@@ -27,7 +27,7 @@ describe('ObjectDetailComponent', () => {
   let rowData: IColumnTabData[]
 
   beforeEach(async () => {
-    dataServiceSpy = jasmine.createSpyObj('DataService', ['updateSequence', 'dropSequence']);
+    dataServiceSpy = jasmine.createSpyObj('DataService', ['updateSequence', 'dropSequence', 'updateCC']);
     dataServiceSpy.updateSequence.and.returnValue(of({}));
     dataServiceSpy.dropSequence.and.returnValue(of(''));
     dialogSpyObj = jasmine.createSpyObj('MatDialog', ['open']);
@@ -205,13 +205,13 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'test',
         spCondition: 'test',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
     ]
 
     const initialLength = component.ccData.length
 
-    component.dropCc({ value: { deleteIndex: 'ck1' } })
+    component.dropCc({ value: { deleteIndex: 'cc1' } })
     expect(component.ccData.length).toBe(initialLength - 1)
     expect(component.setCCRows).toHaveBeenCalled()
     expect(component.ccDataSource.length).toBe(0)
@@ -227,13 +227,13 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'test',
         spCondition: 'test',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
     ]
 
     const initialLength = component.ccData.length
 
-    component.dropCc({ value: { deleteIndex: 'ck2' } })
+    component.dropCc({ value: { deleteIndex: 'cc2' } })
 
     expect(component.ccData.length).toBe(initialLength)
   })
@@ -247,7 +247,7 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'test',
         spCondition: 'test',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
       {
         srcSno: '',
@@ -256,12 +256,12 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'contraintName',
         spCondition: 'test',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
     ]
     spyOn(component, 'setCCRows').and.callThrough()
 
-    component.dropCc({ value: { deleteIndex: 'ck1' } })
+    component.dropCc({ value: { deleteIndex: 'cc1' } })
 
     expect(component.setCCRows).toHaveBeenCalled()
   })
@@ -276,7 +276,7 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'check_1',
         spCondition: 'age > 18',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       },
       {
         srcSno: '',
@@ -285,7 +285,7 @@ describe('ObjectDetailComponent', () => {
         spSno: '2',
         spConstraintName: 'check_1',
         spCondition: 'age >= 18',
-        deleteIndex: 'ck2',
+        deleteIndex: 'cc2',
       },
     ]
     component.setCCRows()
@@ -294,7 +294,7 @@ describe('ObjectDetailComponent', () => {
 
     expect(dialogSpyObj.open).toHaveBeenCalledWith(InfodialogComponent, jasmine.objectContaining({
       data: {
-        message: jasmine.stringMatching(/Duplicate/),
+        message: jasmine.stringMatching(/constraint name or condition is duplicate/),
         type: 'error'
       }
     }));
@@ -310,7 +310,7 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'check_1',
         spCondition: 'age > 18',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       }
     ]
     component.setCCRows()
@@ -335,7 +335,7 @@ describe('ObjectDetailComponent', () => {
         spSno: '1',
         spConstraintName: 'check_1',
         spCondition: 'age > 18',
-        deleteIndex: 'ck1',
+        deleteIndex: 'cc1',
       }
     ]
     component.setCCRows()
