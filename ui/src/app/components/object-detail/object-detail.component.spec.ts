@@ -377,5 +377,4 @@ describe('ObjectDetailComponent', () => {
 
   })
 
-
 });
