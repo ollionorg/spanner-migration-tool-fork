@@ -405,11 +405,11 @@ export class DataService {
       tap(response => console.log('Update Response:', response)),
       map((response: any) => {
         if (response.error) {
-          return `Error: ${response.error}`; // Ensure error is stringified for consistent return type
+          return `Error: ${response.error}`;
         } else {
           this.convSubject.next(response);
           this.getDdl();
-          return ''; // Indicates success
+          return '';
         }
       })
     );
