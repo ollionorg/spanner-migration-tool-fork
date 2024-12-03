@@ -1395,7 +1395,7 @@ export class ObjectDetailComponent implements OnInit {
     if (isDuplicate) {
       this.dialog.open(InfodialogComponent, {
         data: {
-          message: `Check constraint name and Condition is Duplicate. Remove the dependencies from respective row before saving the Column Data. `,
+          message: `Check constraint name OR Condition is Duplicate. Remove the dependencies from respective row before saving the Column Data. `,
           type: 'error',
         },
         maxWidth: '500px',
