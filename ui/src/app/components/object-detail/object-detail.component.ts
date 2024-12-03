@@ -879,7 +879,7 @@ export class ObjectDetailComponent implements OnInit {
     let index = this.ccData.length
     this.ccData.push({
       spSno: `${index + 1}`,
-      spConstraintName: `Constrainst_name${index + 1}`,
+      spConstraintName: `chk_constraint_${index + 1}`,
       spCondition: '',
       srcSno: '',
       srcCondition: '',
@@ -1198,14 +1198,14 @@ export class ObjectDetailComponent implements OnInit {
           srcConstraintName: new FormControl(srcArr[i].srcConstraintName),
           srcCondition: new FormControl(srcArr[i].srcCondition),
           spSno: new FormControl(srcArr[i].spSno),
-          spConstraintName: new FormControl(srcArr[i].spConstraintName, [
+          spConstraintName: new FormControl(
+            {value: srcArr[i].spConstraintName, disabled: false},
+            // !!srcArr[i]?.spConstraintName
+            [
             Validators.required,
             Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
           ]),
-          spCondition: new FormControl(srcArr[i].spCondition, [
-            Validators.required,
-            this.checkCondition(),
-          ]),
+          spCondition: new FormControl(srcArr[i].spCondition),
           deleteIndex: new FormControl(srcArr[i].deleteIndex),
         })
       )
@@ -1238,12 +1238,9 @@ export class ObjectDetailComponent implements OnInit {
             spSno: new FormControl(spArr[i].spSno),
             spConstraintName: new FormControl(spArr[i].spConstraintName, [
               Validators.required,
-              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
+              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?')
             ]),
-            spCondition: new FormControl(spArr[i].spCondition, [
-              Validators.required,
-              this.checkCondition(),
-            ]),
+            spCondition: new FormControl(spArr[i].spCondition),
             deleteIndex: new FormControl(spArr[i].deleteIndex),
           })
         )
@@ -1381,11 +1378,12 @@ export class ObjectDetailComponent implements OnInit {
   saveCc() {
     let spCkArr: ICheckConstraints[] = []
     let isDuplicate = false
+
     this.ccArray.value.forEach((cc: ICcTabData) => {
       isDuplicate = spCkArr.some(
         (item) => item.Name === cc.spConstraintName || item.Expr === cc.spCondition
       )
-
+      console.log({isDuplicate})
       if (!isDuplicate)
         spCkArr.push({
           Id: cc.spSno,

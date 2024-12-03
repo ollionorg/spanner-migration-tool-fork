@@ -780,6 +780,7 @@
                   type="text"
                   [formControl]="element.get('spConstraintName')"
                   matTooltip="No special characters allowed except underscore."
+                  [matTooltipDisabled]="!element.get('spConstraintName')?.hasError('pattern')"
                    />
               </div>
               <p *ngIf="!isCcEditMode">{{ element.get('spConstraintName').value }}</p>
@@ -790,16 +791,11 @@
             <th class="table_header" mat-header-cell *matHeaderCellDef>Condition</th>
             <td mat-cell *matCellDef="let element" >
               <div *ngIf="isCcEditMode">
-                <!-- <input
-                  matInput
-                  class="name_input"
-                  type="text"
-                  [formControl]="element.get('spCondition')"
-                  matTooltip="Enter valid clause for CHECK constraints"
-                   /> -->
                    <textarea name="spConstraintName"  matInput
                    class="name_input" [formControl]="element.get('spCondition')"
-                   matTooltip="Enter valid clause for CHECK constraints" id="ck1"></textarea>
+                   matTooltip="Enter valid clause for CHECK constraints" id="ck1"
+                   [matTooltipDisabled]="!element.get('spCondition')?.hasError('pattern')">
+                  </textarea>
               </div>
               <p *ngIf="!isCcEditMode" matTooltip="{{ element.get('spCondition').value }}"
               matTooltipPosition="above" class="overflow-cell">{{ element.get('spCondition').value }}</p>
