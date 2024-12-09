@@ -5,12 +5,13 @@
     <div
       class="spanner_config"
     >
+
       <mat-icon
-        *ngIf="isOfflineStatus && !showWarning()"
-        class="icon warning"
-        matTooltip="Invalid spanner configuration. Working in offline mode"
+      *ngIf="isOfflineStatus && !showWarning()"
+      class="icon danger"
+      matTooltip="Invalid spanner configuration. Working in offline mode"
       >
-        warning
+      error
       </mat-icon>
 
       <mat-icon

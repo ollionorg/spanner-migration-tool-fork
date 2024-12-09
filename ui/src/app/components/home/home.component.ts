@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { MigrationDetails } from 'src/app/app.constants';
 import { BackendHealthService } from 'src/app/services/backend-health/backend-health.service';
 import { InfodialogComponent } from '../infodialog/infodialog.component';
-import ISpannerConfig from 'src/app/model/spanner-config';
 import { DataService } from 'src/app/services/data/data.service';
 
 @Component({
@@ -13,18 +12,21 @@ import { DataService } from 'src/app/services/data/data.service';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
-  spannerConfig: ISpannerConfig
+  isOfflineStatus: boolean = false
 
   constructor(private dialog: MatDialog,
     private router: Router,
     private data: DataService,
     private healthCheckService: BackendHealthService) {
-      this.spannerConfig = { GCPProjectID: '', SpannerInstanceID: '' }
+
      }
 
   ngOnInit(): void {
-    this.data.config.subscribe((res: ISpannerConfig) => {
-      this.spannerConfig = res
+
+    this.data.isOffline.subscribe({
+      next: (res: boolean) => {
+        this.isOfflineStatus = res
+      },
     })
 
     this.healthCheckService.startHealthCheck();
@@ -34,6 +36,18 @@ export class HomeComponent implements OnInit {
         maxWidth: '500px',
       })
       this.router.navigate(['/prepare-migration'])
+    }
+  }
+
+  connectToDatabase(){
+    if(this.isOfflineStatus){
+      this.dialog.open(InfodialogComponent, {
+        data: { message: "Please configure spanner project id and instance id to proceed", type: 'error', title: 'Configure Spanner' },
+        maxWidth: '500px',
+      })
+    }
+    else{
+      this.router.navigate(['/source/direct-connection'])
     }
   }
 }
