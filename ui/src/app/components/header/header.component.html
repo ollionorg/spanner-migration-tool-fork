@@ -7,7 +7,7 @@
     >
 
       <mat-icon
-      *ngIf="isOfflineStatus && !showWarning()"
+      *ngIf="isOfflineStatus && !showError()"
       class="icon danger"
       matTooltip="Invalid spanner configuration. Working in offline mode"
       >
@@ -16,7 +16,7 @@
 
       <mat-icon
         id="check-icon"
-        *ngIf="!isOfflineStatus && !showWarning()"
+        *ngIf="!isOfflineStatus && !showError()"
         class="icon success"
         matTooltip="Valid spanner configuration."
       >
@@ -24,17 +24,17 @@
       </mat-icon>
 
       <mat-icon
-        *ngIf="showWarning()"
-        class="icon warning"
+        *ngIf="showError()"
+        class="icon danger"
         matTooltip="Spanner configuration has not been set."
       >
-        warning
+      error
       </mat-icon>
-      <div *ngIf="showWarning()">
+      <div *ngIf="showError()">
         <span #name>Spanner database is not configured, click on edit button to configure </span>
       </div>
 
-      <div *ngIf="!showWarning()">
+      <div *ngIf="!showError()">
         <span class="pid"><b>Project Id: </b>{{ spannerConfig.GCPProjectID }}</span>
         <span class="iid"><b>Spanner Instance Id: </b>{{ spannerConfig.SpannerInstanceID }}</span>
       </div>
