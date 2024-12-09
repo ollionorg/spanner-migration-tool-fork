@@ -22,7 +22,6 @@ export class HomeComponent implements OnInit {
      }
 
   ngOnInit(): void {
-
     this.data.isOffline.subscribe({
       next: (res: boolean) => {
         this.isOfflineStatus = res
