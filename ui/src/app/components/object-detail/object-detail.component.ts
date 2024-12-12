@@ -1200,7 +1200,6 @@ export class ObjectDetailComponent implements OnInit {
           spSno: new FormControl(srcArr[i].spSno),
           spConstraintName: new FormControl(
             {value: srcArr[i].spConstraintName, disabled: false},
-            // !!srcArr[i]?.spConstraintName
             [
             Validators.required,
             Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
@@ -1221,9 +1220,9 @@ export class ObjectDetailComponent implements OnInit {
             spSno: new FormControl(''),
             spConstraintName: new FormControl('', [
               Validators.required,
-              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?'),
+              Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
             ]),
-            spCondition: new FormControl('', [Validators.required, this.checkCondition()]),
+            spCondition: new FormControl('', [Validators.required]),
             deleteIndex: new FormControl(srcArr[i].deleteIndex),
           })
         )
@@ -1238,7 +1237,7 @@ export class ObjectDetailComponent implements OnInit {
             spSno: new FormControl(spArr[i].spSno),
             spConstraintName: new FormControl(spArr[i].spConstraintName, [
               Validators.required,
-              Validators.pattern('^[a-zA-Z]([a-zA-Z0-9/_]*[a-zA-Z0-9])?')
+              Validators.pattern('^[a-zA-Z_][a-zA-Z0-9_]{0,63}$'),
             ]),
             spCondition: new FormControl(spArr[i].spCondition),
             deleteIndex: new FormControl(spArr[i].deleteIndex),
@@ -1263,7 +1262,8 @@ export class ObjectDetailComponent implements OnInit {
         const ast = parser.astify(sql)
         return null // If parsing succeeds, it's considered valid
       } catch (error) {
-        return { error }
+        return null
+        // return { error }
       }
     }
   }

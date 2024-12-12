@@ -21,6 +21,8 @@ import { FetchService } from 'src/app/services/fetch/fetch.service'
 import IStructuredReport from '../../model/structured-report'
 import * as JSZip from 'jszip'
 import ICcTabData from 'src/app/model/cc-tab-data'
+import { SnackbarService } from 'src/app/services/snackbar/snackbar.service'
+import { catchError, throwError } from 'rxjs'
 
 @Component({
   selector: 'app-workspace',
@@ -70,6 +72,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     private sidenav: SidenavService,
     private router: Router,
     private clickEvent: ClickEventService,
+    private snackbarService: SnackbarService,
     private fetch: FetchService
   ) {
     this.currentObject = null
@@ -437,10 +440,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
             maxWidth: '500px',
           })
         } else {
-          this.fetch.validateCheckConstraint().subscribe((res: any) => {
+          this.fetch.validateCheckConstraint().pipe(
+            catchError((err) => {
+              if (err.status === 500) {
+                this.snackbarService.openSnackBar(err.error, 'Close')
+              }
+              return throwError(err);
+            })
+          ).subscribe((res: any) => {
             if (res) {
               this.router.navigate(['/prepare-migration'])
             } else {
+              debugger
+              this.snackbarService.openSnackBar("error", 'Close')
               this.dialog.open(InfodialogComponent, {
                 data: {
                   message:

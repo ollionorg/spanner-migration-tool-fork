@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/common/constants"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/common/utils"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/conversion"
+	"github.com/GoogleCloudPlatform/spanner-migration-tool/expressions_api"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/internal"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/internal/reports"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/profiles"
@@ -535,7 +537,18 @@ func doesNameExist(spcks []ddl.Checkconstraint, targetName string) bool {
 	return false
 }
 
+func findColId(colDefs map[string]ddl.ColumnDef, condition string) string {
+	for _, colDef := range colDefs {
+		if strings.Contains(condition, colDef.Name) {
+			return colDef.Id
+		}
+	}
+	return ""
+}
+
 // ValidateCheckConstraint verifies if the type of a database column has been altered and add an error if a change is detected.
+// ValidateExpression verifies the conv object and all check constraints expression
+// func ValidateExpression(w http.ResponseWriter, r *http.Request) {
 func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	sessionState := session.GetSessionState()
 	if sessionState.Conv == nil || sessionState.Driver == "" {
@@ -545,46 +558,54 @@ func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	sessionState.Conv.ConvLock.Lock()
 	defer sessionState.Conv.ConvLock.Unlock()
 
-	sp := sessionState.Conv.SpSchema
-	srcschema := sessionState.Conv.SrcSchema
+	spschema := sessionState.Conv.SpSchema
 
 	flag := true
 
-	schemaissue := []internal.SchemaIssue{}
+	expressionDetailList := []internal.ExpressionDetail{}
+	ctx := context.Background()
 
-	for _, src := range srcschema {
+	for _, sp := range spschema {
+		for _, cc := range sp.CheckConstraint {
 
-		for _, col := range sp[src.Id].ColDefs {
-
-			if len(sp[src.Id].CheckConstraint) != 0 {
-				spType := col.T.Name
-				srcType := srcschema[src.Id].ColDefs[col.Id].Type
-
-				actualType := mysqlDefaultTypeMap[srcType.Name]
-
-				if actualType.Name != spType {
-
-					columnName := sp[src.Id].ColDefs[col.Id].Name
-					spcks := sp[src.Id].CheckConstraint
-					if doesNameExist(spcks, columnName) {
-						flag = false
-
-						schemaissue = sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id]
-
-						if !utilities.IsSchemaIssuePresent(schemaissue, internal.TypeMismatch) {
-							schemaissue = append(schemaissue, internal.TypeMismatch)
-						}
-
-						sessionState.Conv.SchemaIssues[src.Id].ColumnLevelIssues[col.Id] = schemaissue
-
-						break
-
-					}
-				}
+			colId := findColId(sp.ColDefs, cc.Expr)
+			expressionDetail := internal.ExpressionDetail{
+				Expression:       cc.Expr,
+				Type:             "CHECK",
+				ReferenceElement: internal.ReferenceElement{Name: sp.Name},
+				ExpressionId:     cc.Id,
+				Metadata:         map[string]string{"tableId": sp.Id, "colId": colId},
 			}
-
+			expressionDetailList = append(expressionDetailList, expressionDetail)
 		}
+	}
 
+	accessor, err := expressions_api.NewExpressionVerificationAccessorImpl(ctx, session.GetSessionState().SpannerProjectId, session.GetSessionState().SpannerInstanceID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create ExpressionVerificationAccessorImpl: %v"), http.StatusNotFound)
+		return
+	}
+	verifyExpressionsInput := internal.VerifyExpressionsInput{
+		Conv:                 sessionState.Conv,
+		Source:               "mysql",
+		ExpressionDetailList: expressionDetailList,
+	}
+
+	result := accessor.VerifyExpressions(ctx, verifyExpressionsInput)
+	if result.ExpressionVerificationOutputList != nil {
+		for _, ev := range result.ExpressionVerificationOutputList {
+			if !ev.Result {
+				flag = false
+				tableId := ev.ExpressionDetail.Metadata["tableId"]
+				colId := ev.ExpressionDetail.Metadata["colId"]
+
+				colIssue := sessionState.Conv.SchemaIssues[tableId].ColumnLevelIssues[colId]
+				// if !utilities.IsSchemaIssuePresent(colIssue, internal.TypeMismatch) {
+				colIssue = append(colIssue)
+				// }
+				sessionState.Conv.SchemaIssues[tableId].ColumnLevelIssues[colId] = colIssue
+			}
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
