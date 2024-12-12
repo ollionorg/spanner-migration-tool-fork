@@ -396,8 +396,8 @@ export class DataService {
     )
   }
 
-  updateCC(tableId: string, updatedCC: ICheckConstraints[]): Observable<string> {
-    return this.fetch.updateCC(tableId, updatedCC).pipe(
+  updateCheckConstraint(tableId: string, updatedCC: ICheckConstraints[]): Observable<string> {
+    return this.fetch.updateCheckConstraint(tableId, updatedCC).pipe(
       catchError((error: any) => {
         console.error('Error updating check constraints:', error);
         return of(`Error: ${error.message || 'Unknown error'}`);
@@ -405,7 +405,7 @@ export class DataService {
       tap(response => console.log('Update Response:', response)),
       map((response: any) => {
         if (response.error) {
-          return `Error: ${response.error}`;
+          return response.error;
         } else {
           this.convSubject.next(response);
           this.getDdl();
