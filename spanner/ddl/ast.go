@@ -289,9 +289,10 @@ type Foreignkey struct {
 }
 
 type Checkconstraint struct {
-	Id   string
-	Name string
-	Expr string
+	Id     string
+	Name   string
+	Expr   string
+	ExprId string
 }
 
 // InterleavedParent encodes the following DDL definition:

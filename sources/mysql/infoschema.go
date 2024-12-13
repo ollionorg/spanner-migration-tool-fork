@@ -330,7 +330,7 @@ func (isi InfoSchemaImpl) GetConstraints(conv *internal.Conv, table common.Schem
 					checkClause = strings.ReplaceAll(checkClause, "_utf8mb4\\", "")
 					checkClause = strings.ReplaceAll(checkClause, "\\", "")
 
-					checkKeys = append(checkKeys, schema.CheckConstraints{Name: constraintName, Expr: string(checkClause), Id: internal.GenerateCheckConstrainstId()})
+					checkKeys = append(checkKeys, schema.CheckConstraints{Name: constraintName, Expr: string(checkClause), ExprId: internal.GenerateExpressionId(), Id: internal.GenerateCheckConstrainstId()})
 				default:
 					m[col] = append(m[col], constraint)
 				}

@@ -573,7 +573,7 @@ func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 				Expression:       cc.Expr,
 				Type:             "CHECK",
 				ReferenceElement: internal.ReferenceElement{Name: sp.Name},
-				ExpressionId:     cc.Id,
+				ExpressionId:     cc.ExprId,
 				Metadata:         map[string]string{"tableId": sp.Id, "colId": colId},
 			}
 			expressionDetailList = append(expressionDetailList, expressionDetail)
@@ -599,11 +599,28 @@ func ValidateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 				tableId := ev.ExpressionDetail.Metadata["tableId"]
 				colId := ev.ExpressionDetail.Metadata["colId"]
 
+				err := ev.Err.Error()
+				var issueType internal.SchemaIssue
+
+				switch {
+				case strings.Contains(err, "No matching signature for operator"):
+					issueType = internal.TypeMismatch
+				case strings.Contains(err, "Syntax error"):
+					issueType = internal.InvalidCondition
+				case strings.Contains(err, "Unrecognized name"):
+					issueType = internal.ColumnNotFound
+				default:
+					fmt.Println("Unhandled error:", err)
+					return
+				}
+
 				colIssue := sessionState.Conv.SchemaIssues[tableId].ColumnLevelIssues[colId]
-				// if !utilities.IsSchemaIssuePresent(colIssue, internal.TypeMismatch) {
-				colIssue = append(colIssue)
-				// }
+
+				if !utilities.IsSchemaIssuePresent(colIssue, issueType) {
+					colIssue = append(colIssue, issueType)
+				}
 				sessionState.Conv.SchemaIssues[tableId].ColumnLevelIssues[colId] = colIssue
+
 			}
 		}
 	}

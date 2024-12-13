@@ -63,7 +63,11 @@ func GenerateForeignkeyId() string {
 }
 
 func GenerateCheckConstrainstId() string {
-	return GenerateId("ck")
+	return GenerateId("checkConstraint")
+}
+
+func GenerateExpressionId() string {
+	return GenerateId("exp")
 }
 
 func GenerateIndexesId() string {

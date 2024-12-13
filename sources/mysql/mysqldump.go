@@ -336,9 +336,10 @@ func toCheckConstraints(ckArray []*ast.Constraint) (cks []schema.CheckConstraint
 			exp := expressionToString(ck.Expr)
 			exp = strings.ReplaceAll(exp, "_UTF8MB4", "")
 			checkConstraint := schema.CheckConstraints{
-				Name: ck.Name,
-				Expr: exp,
-				Id:   internal.GenerateCheckConstrainstId(),
+				Name:   ck.Name,
+				Expr:   exp,
+				ExprId: internal.GenerateExpressionId(),
+				Id:     internal.GenerateCheckConstrainstId(),
 			}
 			cks = append(cks, checkConstraint)
 		}
