@@ -20,6 +20,9 @@ import { InfodialogComponent } from '../infodialog/infodialog.component'
 import { FetchService } from 'src/app/services/fetch/fetch.service'
 import IStructuredReport from '../../model/structured-report'
 import * as JSZip from 'jszip'
+import ICcTabData from 'src/app/model/cc-tab-data'
+import { SnackbarService } from 'src/app/services/snackbar/snackbar.service'
+import { catchError, throwError } from 'rxjs'
 
 @Component({
   selector: 'app-workspace',
@@ -44,7 +47,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
   converObj!: Subscription
   ddlsumconvObj!: Subscription
   ddlObj!: Subscription
-  rerenderObj!: Subscription;
+  rerenderObj!: Subscription
   isLeftColumnCollapse: boolean = false
   isRightColumnCollapse: boolean = true
   isMiddleColumnCollapse: boolean = true
@@ -61,6 +64,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
   currentDatabase: string = 'spanner'
   dialect: string = ''
   structuredReport!: IStructuredReport
+  ccData: ICcTabData[] = []
   constructor(
     private data: DataService,
     private conversion: ConversionService,
@@ -68,7 +72,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     private sidenav: SidenavService,
     private router: Router,
     private clickEvent: ClickEventService,
-    private fetch: FetchService,
+    private snackbarService: SnackbarService,
+    private fetch: FetchService
   ) {
     this.currentObject = null
   }
@@ -93,15 +98,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
       this.isMiddleColumnCollapse = !flag
     })
 
-    if (this.data.autoGenMap){
+    if (this.data.autoGenMap) {
       this.autoGenMapObj = this.data.autoGenMap.subscribe((autoGenMap) => {
         this.autoGenMap = autoGenMap
       })
     }
-    if (this.data.treeUpdate){
+    if (this.data.treeUpdate) {
       this.rerenderObj = this.data.treeUpdate.subscribe(() => {
-        this.reRenderObjectExplorerSpanner();
-      });
+        this.reRenderObjectExplorerSpanner()
+      })
     }
 
     this.convObj = this.data.conv.subscribe((data: IConv) => {
@@ -129,7 +134,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
         this.reRenderObjectExplorerSrc()
         this.objectExplorerInitiallyRender = true
       }
+
       if (this.currentObject && this.currentObject.type === ObjectExplorerNodeType.Table) {
+        this.ccData = this.currentObject
+          ? this.conversion.getCheckConstrainst(this.currentObject.id, data)
+          : []
+
         this.fkData = this.currentObject
           ? this.conversion.getFkMapping(this.currentObject.id, data)
           : []
@@ -149,7 +159,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
           this.currentObject.id
         )
       }
-      this.dialect = (this.conv.SpDialect === "postgresql") ? "PostgreSQL" : "Google Standard SQL"
+      this.dialect = this.conv.SpDialect === 'postgresql' ? 'PostgreSQL' : 'Google Standard SQL'
     })
 
     this.converObj = this.data.conversionRate.subscribe((rates: any) => {
@@ -177,11 +187,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     this.convObj.unsubscribe()
     this.ddlObj.unsubscribe()
     this.ddlsumconvObj.unsubscribe()
-    if (this.autoGenMapObj){
+    if (this.autoGenMapObj) {
       this.autoGenMapObj.unsubscribe()
     }
-    if (this.rerenderObj){
-      this.rerenderObj.unsubscribe();
+    if (this.rerenderObj) {
+      this.rerenderObj.unsubscribe()
     }
   }
 
@@ -215,22 +225,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
     this.srcTree = this.conversion.createTreeNodeForSource(this.conv, this.conversionRates)
   }
 
-
   changeCurrentObject(object: FlatNode) {
     if (object.type === ObjectExplorerNodeType.Table) {
       this.currentObject = object
       this.tableData = this.conversion.getColumnMapping(this.currentObject.id, this.conv)
-
+      this.ccData = this.conversion.getCheckConstrainst(this.currentObject.id, this.conv)
       this.fkData = []
-      this.fkData =  this.conversion.getFkMapping(this.currentObject.id, this.conv)
+      this.fkData = this.conversion.getFkMapping(this.currentObject.id, this.conv)
     } else if (object.type === ObjectExplorerNodeType.Index) {
       this.currentObject = object
       this.indexData = this.conversion.getIndexMapping(object.parentId, this.conv, object.id)
     } else if (object.type === ObjectExplorerNodeType.Sequence) {
       this.currentObject = object
       this.sequenceData = this.conversion.getSequenceMapping(object.id, this.conv)
-    }
-    else {
+    } else {
       this.currentObject = null
     }
   }
@@ -270,7 +278,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
       let config: IDbConfig = JSON.parse(localStorage.getItem(StorageKeys.Config)!)
       connectionDetail = config?.hostName + ' : ' + config?.port
     } else {
-        connectionDetail = this.conv.DatabaseName
+      connectionDetail = this.conv.DatabaseName
     }
     let viewAssesmentData: IViewAssesmentData = {
       srcDbType: this.srcDbName,
@@ -287,80 +295,85 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
   downloadSession() {
     downloadSession(this.conv)
   }
-  
-  downloadArtifacts(){
+
+  downloadArtifacts() {
     let zip = new JSZip()
     let fileNameHeader = `${this.conv.DatabaseName}`
-    this.fetch.getDStructuredReport().subscribe({ 
+    this.fetch.getDStructuredReport().subscribe({
       next: (resStructured: IStructuredReport) => {
-        let resJson = JSON.stringify(resStructured).replace(/9223372036854776000/g, '9223372036854775807')
+        let resJson = JSON.stringify(resStructured).replace(
+          /9223372036854776000/g,
+          '9223372036854775807'
+        )
         let fileName = fileNameHeader + '_migration_structuredReport.json'
         // add structured report to zip file
         zip.file(fileName, resJson)
-        this.fetch.getDTextReport().subscribe({  
+        this.fetch.getDTextReport().subscribe({
           next: (resText: string) => {
             // add text report to zip file
             zip.file(fileNameHeader + '_migration_textReport.txt', resText)
-            this.fetch.getDSpannerDDL().subscribe({  
+            this.fetch.getDSpannerDDL().subscribe({
               next: (resDDL: string) => {
                 // add spanner DDL to zip file
                 zip.file(fileNameHeader + '_spannerDDL.txt', resDDL)
-                let resJsonSession = JSON.stringify(this.conv).replace(/9223372036854776000/g, '9223372036854775807')
+                let resJsonSession = JSON.stringify(this.conv).replace(
+                  /9223372036854776000/g,
+                  '9223372036854775807'
+                )
                 let sessionFileName = `${this.conv.SessionName}_${this.conv.DatabaseType}_${fileNameHeader}.json`
                 // add session to zip file
                 zip.file(sessionFileName, resJsonSession)
                 // Generate the zip file asynchronously
-                zip.generateAsync({ type: 'blob' })
-                .then((blob: Blob) => {
-                  var a = document.createElement('a');
-                  a.href = URL.createObjectURL(blob);
-                  a.download = `${fileNameHeader}_artifacts`;
-                  a.click();
+                zip.generateAsync({ type: 'blob' }).then((blob: Blob) => {
+                  var a = document.createElement('a')
+                  a.href = URL.createObjectURL(blob)
+                  a.download = `${fileNameHeader}_artifacts`
+                  a.click()
                 })
-              }
+              },
             })
-          }
+          },
         })
-      }
+      },
     })
   }
 
   // downloads structured report of the migration in JSON format
-  downloadStructuredReport(){
+  downloadStructuredReport() {
     var a = document.createElement('a')
-    this.fetch.getDStructuredReport().subscribe({ 
+    this.fetch.getDStructuredReport().subscribe({
       next: (res: IStructuredReport) => {
         let resJson = JSON.stringify(res).replace(/9223372036854776000/g, '9223372036854775807')
         a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(resJson)
         a.download = `${this.conv.DatabaseName}_migration_structuredReport.json`
         a.click()
-      }
+      },
     })
   }
 
   // downloads text report of the migration in text format in more human readable form
-  downloadTextReport(){
+  downloadTextReport() {
     var a = document.createElement('a')
-    this.fetch.getDTextReport().subscribe({  
+    this.fetch.getDTextReport().subscribe({
       next: (res: string) => {
         a.href = 'data:text;charset=utf-8,' + encodeURIComponent(res)
         a.download = `${this.conv.DatabaseName}_migration_textReport.txt`
         a.click()
-      }
+      },
     })
   }
 
   // downloads text file of Spanner's DDL of the schema. However this is optimized for reading and includes comments, foreign keys
   // and doesn't add backticks around table and column names. This is not strictly
-	// legal Cloud Spanner DDL (Cloud Spanner doesn't currently support comments).
-  downloadDDL(){
+  // legal Cloud Spanner DDL (Cloud Spanner doesn't currently support comments).
+  downloadDDL() {
     var a = document.createElement('a')
-    this.fetch.getDSpannerDDL().subscribe({  
+    this.fetch.getDSpannerDDL().subscribe({
       next: (res: string) => {
         a.href = 'data:text;charset=utf-8,' + encodeURIComponent(res)
         a.download = `${this.conv.DatabaseName}_spannerDDL.txt`
         a.click()
-      }
+      },
     })
   }
 
@@ -400,28 +413,61 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
   prepareMigration() {
     this.fetch.getTableWithErrors().subscribe({
       next: (res: ITableIdAndName[]) => {
-        if (res != null && res.length !=0)
-        {
-          let errMsg = 'Please fix the errors for the following tables to move ahead: '+ res.map(x => x.Name).join(', ')
+        if (res != null && res.length != 0) {
+          let errMsg =
+            'Please fix the errors for the following tables to move ahead: ' +
+            res.map((x) => x.Name).join(', ')
           this.dialog.open(InfodialogComponent, {
             data: { message: errMsg, type: 'error', title: 'Error in Spanner Draft' },
             maxWidth: '500px',
           })
         } else if (this.isOfflineStatus) {
           this.dialog.open(InfodialogComponent, {
-            data: { message: "Please configure spanner project id and instance id to proceed", type: 'error', title: 'Configure Spanner' },
+            data: {
+              message: 'Please configure spanner project id and instance id to proceed',
+              type: 'error',
+              title: 'Configure Spanner',
+            },
             maxWidth: '500px',
           })
         } else if (Object.keys(this.conv.SpSchema).length == 0) {
           this.dialog.open(InfodialogComponent, {
-            data: { message: "Please restore some table(s) to proceed with the migration", type: 'error', title: 'All tables skipped' },
+            data: {
+              message: 'Please restore some table(s) to proceed with the migration',
+              type: 'error',
+              title: 'All tables skipped',
+            },
             maxWidth: '500px',
           })
         } else {
-          this.router.navigate(['/prepare-migration'])
+          this.fetch.validateCheckConstraint().pipe(
+            catchError((err) => {
+              if (err.status === 500) {
+                this.snackbarService.openSnackBar(err.error, 'Close')
+              }
+              return throwError(err);
+            })
+          ).subscribe((res: any) => {
+            if (res) {
+              this.router.navigate(['/prepare-migration'])
+            } else {
+              debugger
+              this.snackbarService.openSnackBar("error", 'Close')
+              this.dialog.open(InfodialogComponent, {
+                data: {
+                  message:
+                    'Type Mismatch Error. Check the dependencies of type in check constraints tab',
+                  type: 'warning',
+                  title: 'Type Mismatch Error',
+                },
+                maxWidth: '500px',
+              })
+              this.data.getSummary()
+            }
+          })
         }
-      }
-    }) 
+      },
+    })
   }
   spannerTab() {
     this.clickEvent.setTabToSpanner()
