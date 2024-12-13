@@ -648,20 +648,20 @@ func TestGetConstraints_CheckConstraintsTableExists(t *testing.T) {
 			rows:  [][]driver.Value{{1}},
 		},
 		{
-			query: `SELECT k.COLUMN_NAME, t.CONSTRAINT_TYPE, COALESCE\(c.CHECK_CLAUSE, ''\) AS CHECK_CLAUSE
-	         FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS t
-	         LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS k
-	         ON t.CONSTRAINT_NAME = k.CONSTRAINT_NAME
-	         AND t.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA
-	         AND t.TABLE_NAME = k.TABLE_NAME
-	         LEFT JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS AS c
-	         ON t.CONSTRAINT_NAME = c.CONSTRAINT_NAME
-	         WHERE t.TABLE_SCHEMA = \?
-	         AND t.TABLE_NAME = \?
-	         ORDER BY k.ORDINAL_POSITION;`,
+			query: `SELECT COALESCE(k.COLUMN_NAME,'') AS COLUMN_NAME,t.CONSTRAINT_NAME, t.CONSTRAINT_TYPE, COALESCE(c.CHECK_CLAUSE, '') AS CHECK_CLAUSE
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS t
+            LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS k
+            ON t.CONSTRAINT_NAME = k.CONSTRAINT_NAME 
+            AND t.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA 
+            AND t.TABLE_NAME = k.TABLE_NAME
+            LEFT JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS AS c
+            ON t.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+            WHERE t.TABLE_SCHEMA = ? 
+            AND t.TABLE_NAME = ?
+            ORDER BY k.ORDINAL_POSITION;`,
 			args: []driver.Value{"your_schema", "your_table"},
-			cols: []string{"COLUMN_NAME", "CONSTRAINT_TYPE", "CHECK_CLAUSE"},
-			rows: [][]driver.Value{{"column1", "PRIMARY KEY", ""}, {"column2", "CHECK", "(column2 > 0)"}},
+			cols: []string{"COLUMN_NAME", "CONSTRAINT_NAME", "CONSTRAINT_TYPE", "CHECK_CLAUSE"},
+			rows: [][]driver.Value{{"column1", "PRIMARY KEY", ""}, {"column2", "check_name", "CHECK", "(column2 > 0)"}},
 		},
 	}
 	db := mkMockDB(t, ms)
@@ -672,7 +672,7 @@ func TestGetConstraints_CheckConstraintsTableExists(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"column1"}, primaryKeys)
 	assert.Equal(t, len(checkKeys), 1)
-	assert.Equal(t, checkKeys[0].Name, "column2_check")
+	assert.Equal(t, checkKeys[0].Name, "check_name")
 	assert.Equal(t, checkKeys[0].Expr, "(column2 > 0)")
 	assert.NotNil(t, m)
 }
