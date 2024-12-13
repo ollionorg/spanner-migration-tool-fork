@@ -17,6 +17,7 @@ package mysql
 import (
 	"database/sql"
 	"database/sql/driver"
+	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -648,7 +649,7 @@ func TestGetConstraints_CheckConstraintsTableExists(t *testing.T) {
 			rows:  [][]driver.Value{{1}},
 		},
 		{
-			query: `SELECT COALESCE(k.COLUMN_NAME,'') AS COLUMN_NAME,t.CONSTRAINT_NAME, t.CONSTRAINT_TYPE, COALESCE(c.CHECK_CLAUSE, '') AS CHECK_CLAUSE
+			query: regexp.QuoteMeta(`SELECT COALESCE(k.COLUMN_NAME,'') AS COLUMN_NAME,t.CONSTRAINT_NAME, t.CONSTRAINT_TYPE, COALESCE(c.CHECK_CLAUSE, '') AS CHECK_CLAUSE
             FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS t
             LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS k
             ON t.CONSTRAINT_NAME = k.CONSTRAINT_NAME 
@@ -658,17 +659,17 @@ func TestGetConstraints_CheckConstraintsTableExists(t *testing.T) {
             ON t.CONSTRAINT_NAME = c.CONSTRAINT_NAME
             WHERE t.TABLE_SCHEMA = ? 
             AND t.TABLE_NAME = ?
-            ORDER BY k.ORDINAL_POSITION;`,
-			args: []driver.Value{"your_schema", "your_table"},
+            ORDER BY k.ORDINAL_POSITION;`),
+			args: []driver.Value{"test_schema", "test_table"},
 			cols: []string{"COLUMN_NAME", "CONSTRAINT_NAME", "CONSTRAINT_TYPE", "CHECK_CLAUSE"},
-			rows: [][]driver.Value{{"column1", "PRIMARY KEY", ""}, {"column2", "check_name", "CHECK", "(column2 > 0)"}},
+			rows: [][]driver.Value{{"column1","PRIMARY", "PRIMARY KEY", ""}, {"column2", "check_name", "CHECK", "(column2 > 0)"}},
 		},
 	}
 	db := mkMockDB(t, ms)
 	isi := InfoSchemaImpl{Db: db}
 	conv := &internal.Conv{}
 
-	primaryKeys, checkKeys, m, err := isi.GetConstraints(conv, common.SchemaAndName{Schema: "your_schema", Name: "your_table"})
+	primaryKeys, checkKeys, m, err := isi.GetConstraints(conv, common.SchemaAndName{Schema: "test_schema", Name: "test_table"})
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"column1"}, primaryKeys)
 	assert.Equal(t, len(checkKeys), 1)
