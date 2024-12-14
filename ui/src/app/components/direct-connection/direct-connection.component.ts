@@ -94,7 +94,7 @@ export class DirectConnectionComponent implements OnInit {
           localStorage.setItem(PersistedFormValues.IsConnectionSuccessful, "true")
           this.clickEvent.closeDatabaseLoader()
         },
-        error: (e) => { 
+        error: (e) => {
           this.isTestConnectionSuccessful = false
           this.snackbarService.openSnackBar(e.error, 'Close')
           localStorage.setItem(PersistedFormValues.IsConnectionSuccessful, "false")
@@ -132,10 +132,14 @@ export class DirectConnectionComponent implements OnInit {
             this.clickEvent.closeDatabaseLoader()
             //after a successful load, remove the persisted values.
             localStorage.removeItem(PersistedFormValues.DirectConnectForm)
-            this.router.navigate(['/workspace'])
+            this.fetch.verifyCheckConstraintExpression().subscribe(()=>{
+                this.data.getSummary()
+                this.router.navigate(['/workspace'])
+            })
+
           })
         },
-        error: (e) => { 
+        error: (e) => {
           this.snackbarService.openSnackBar(e.error, 'Close')
           this.clickEvent.closeDatabaseLoader()
         },
