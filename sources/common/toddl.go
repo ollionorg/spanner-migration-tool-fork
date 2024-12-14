@@ -177,6 +177,7 @@ func (ss *SchemaToSpannerImpl) SchemaToSpannerDDLHelper(conv *internal.Conv, tod
 		Comment:          comment,
 		Id:               srcTable.Id,
 	}
+
 	return nil
 }
 
@@ -241,9 +242,10 @@ func cvtCheckConstraint(conv *internal.Conv, srcKeys []schema.CheckConstraint) [
 
 	for _, cks := range srcKeys {
 		spcks = append(spcks, ddl.CheckConstraint{
-			Id:   cks.Id,
-			Name: internal.ToSpannerCheckConstraintName(conv, cks.Name),
-			Expr: cks.Expr,
+			Id:     cks.Id,
+			Name:   internal.ToSpannerCheckConstraintName(conv, cks.Name),
+			Expr:   cks.Expr,
+			ExprId: cks.ExprId,
 		})
 	}
 	return spcks

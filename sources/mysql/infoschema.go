@@ -326,7 +326,7 @@ func (isi InfoSchemaImpl) processRow(
 	case "CHECK":
 		checkClause = collationRegex.ReplaceAllString(checkClause, "")
 		// constraintName := fmt.Sprintf("%s_check", col)
-		*checkKeys = append(*checkKeys, schema.CheckConstraint{Name: constraintName, Expr: checkClause, Id: internal.GenerateCheckConstrainstId()})
+		*checkKeys = append(*checkKeys, schema.CheckConstraint{Name: constraintName, Expr: checkClause, ExprId: internal.GenerateCheckConstrainstExprId(), Id: internal.GenerateCheckConstrainstId()})
 	default:
 		m[col] = append(m[col], constraintType)
 	}
