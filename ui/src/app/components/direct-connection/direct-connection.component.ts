@@ -125,11 +125,7 @@ export class DirectConnectionComponent implements OnInit {
             next: () => {
 
               this.getSchemaRequest = this.data.getSchemaConversionFromDb()
-              this.data.conv.subscribe((res,defaultValue=true) => {
-                debugger
-              if(defaultValue){
-                this.fetch.verifyCheckConstraintExpression().subscribe((res:any)=>{
-                    this.data.getSummary()
+              this.data.conv.subscribe((res) => {
                   localStorage.setItem(
                     StorageKeys.Config,
                     JSON.stringify({ dbEngine, hostName, port, userName, password, dbName })
@@ -140,25 +136,6 @@ export class DirectConnectionComponent implements OnInit {
                   //after a successful load, remove the persisted values.
                   localStorage.removeItem(PersistedFormValues.DirectConnectForm)
                 this.router.navigate(['/workspace'])
-
-
-
-              })
-            }
-            else{
-              localStorage.setItem(
-                StorageKeys.Config,
-                JSON.stringify({ dbEngine, hostName, port, userName, password, dbName })
-              )
-              localStorage.setItem(StorageKeys.Type, InputType.DirectConnect)
-              localStorage.setItem(StorageKeys.SourceDbName, extractSourceDbName(dbEngine!))
-              this.clickEvent.closeDatabaseLoader()
-              //after a successful load, remove the persisted values.
-              localStorage.removeItem(PersistedFormValues.DirectConnectForm)
-
-
-              this.router.navigate(['/workspace'])
-            }
 
               })
 
