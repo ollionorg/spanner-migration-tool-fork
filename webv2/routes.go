@@ -44,7 +44,7 @@ func getRoutes() *mux.Router {
 	}
 
 	ctx := context.Background()
-	spanneraccessor, _:= spanneraccessor.NewSpannerAccessorClientImpl(ctx)
+	spanneraccessor, _ := spanneraccessor.NewSpannerAccessorClientImpl(ctx)
 	dsClient, _ := ds.NewDatastreamClientImpl(ctx)
 	storageclient, _ := storageclient.NewStorageClientImpl(ctx)
 	validateResourceImpl := conversion.NewValidateResourcesImpl(spanneraccessor, &datastream_accessor.DatastreamAccessorImpl{},
@@ -78,6 +78,8 @@ func getRoutes() *mux.Router {
 
 	router.HandleFunc("/setparent", api.SetParentTable).Methods("GET")
 	router.HandleFunc("/removeParent", api.RemoveParentTable).Methods("POST")
+
+	router.HandleFunc("/verifyExpression", api.VerifyExpression).Methods("GET")
 
 	// TODO:(searce) take constraint names themselves which are guaranteed to be unique for Spanner.
 	router.HandleFunc("/drop/secondaryindex", api.DropSecondaryIndex).Methods("POST")

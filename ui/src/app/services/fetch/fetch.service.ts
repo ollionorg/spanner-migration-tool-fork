@@ -210,8 +210,8 @@ export class FetchService {
     return this.http.post(`${this.url}/restore/tables`, payload)
   }
 
-  validateCheckConstraint() {
-    return this.http.get(`${this.url}/validateCheckConstraint`)
+  verifyExpression() {
+    return this.http.get(`${this.url}/verifyExpression`)
   }
 
   updateCheckConstraint(tableId: string, payload: ICheckConstraints[]): any {
