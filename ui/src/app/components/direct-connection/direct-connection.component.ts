@@ -119,31 +119,56 @@ export class DirectConnectionComponent implements OnInit {
       password: password!,
       dbName: dbName!,
     }
-    this.connectRequest =this.fetch.connectTodb(config, dialect!).subscribe({
-        next: () => {
-          this.getSchemaRequest = this.data.getSchemaConversionFromDb()
-          this.data.conv.subscribe((res) => {
-            localStorage.setItem(
-              StorageKeys.Config,
-              JSON.stringify({ dbEngine, hostName, port, userName, password, dbName })
-            )
-            localStorage.setItem(StorageKeys.Type, InputType.DirectConnect)
-            localStorage.setItem(StorageKeys.SourceDbName, extractSourceDbName(dbEngine!))
-            this.clickEvent.closeDatabaseLoader()
-            //after a successful load, remove the persisted values.
-            localStorage.removeItem(PersistedFormValues.DirectConnectForm)
-            this.fetch.verifyCheckConstraintExpression().subscribe(()=>{
-                this.data.getSummary()
-                this.router.navigate(['/workspace'])
-            })
 
+        this.connectRequest =this.fetch.connectTodb(config, dialect!).subscribe({
+
+            next: () => {
+
+              this.getSchemaRequest = this.data.getSchemaConversionFromDb()
+              this.data.conv.subscribe((res,defaultValue=true) => {
+                debugger
+              if(defaultValue){
+                this.fetch.verifyCheckConstraintExpression().subscribe((res:any)=>{
+                    this.data.getSummary()
+                  localStorage.setItem(
+                    StorageKeys.Config,
+                    JSON.stringify({ dbEngine, hostName, port, userName, password, dbName })
+                  )
+                  localStorage.setItem(StorageKeys.Type, InputType.DirectConnect)
+                  localStorage.setItem(StorageKeys.SourceDbName, extractSourceDbName(dbEngine!))
+                  this.clickEvent.closeDatabaseLoader()
+                  //after a successful load, remove the persisted values.
+                  localStorage.removeItem(PersistedFormValues.DirectConnectForm)
+                this.router.navigate(['/workspace'])
+
+
+
+              })
+            }
+            else{
+              localStorage.setItem(
+                StorageKeys.Config,
+                JSON.stringify({ dbEngine, hostName, port, userName, password, dbName })
+              )
+              localStorage.setItem(StorageKeys.Type, InputType.DirectConnect)
+              localStorage.setItem(StorageKeys.SourceDbName, extractSourceDbName(dbEngine!))
+              this.clickEvent.closeDatabaseLoader()
+              //after a successful load, remove the persisted values.
+              localStorage.removeItem(PersistedFormValues.DirectConnectForm)
+
+
+              this.router.navigate(['/workspace'])
+            }
+
+              })
+
+            },
+            error: (e) => {
+              this.snackbarService.openSnackBar(e.error, 'Close')
+              this.clickEvent.closeDatabaseLoader()
+            },
           })
-        },
-        error: (e) => {
-          this.snackbarService.openSnackBar(e.error, 'Close')
-          this.clickEvent.closeDatabaseLoader()
-        },
-      })
+
   }
 
   refreshDbSpecifcConnectionOptions() {
