@@ -56,6 +56,7 @@ type Conv struct {
 	SrcSequences       map[string]ddl.Sequence // Maps source-DB Sequences to Sequence schema information
 	SpProjectId        string
 	SpInstanceId       string
+	Source             string
 }
 
 type TableIssues struct {
