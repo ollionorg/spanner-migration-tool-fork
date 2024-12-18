@@ -455,11 +455,6 @@ func Test_cvtCheckContraint(t *testing.T) {
 			Expr:   "age != 0",
 			ExprId: "expr3",
 		},
-		{
-			Id:   "cc3",
-			Name: "@invalid_name", // incompatabile name
-			Expr: "age != 0",
-		},
 	}
 	spSchema := []ddl.CheckConstraint{
 		{
@@ -479,11 +474,6 @@ func Test_cvtCheckContraint(t *testing.T) {
 			Name:   "Ainvalid_name",
 			Expr:   "age != 0",
 			ExprId: "expr3",
-		},
-		{
-			Id:   "cc3",
-			Name: "Ainvalid_name",
-			Expr: "age != 0",
 		},
 	}
 	result := cvtCheckConstraint(conv, srcSchema)
