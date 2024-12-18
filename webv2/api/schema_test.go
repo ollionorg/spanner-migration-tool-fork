@@ -2,7 +2,6 @@ package api_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -2628,17 +2627,6 @@ type errReader struct{}
 
 func (errReader) Read(p []byte) (n int, err error) {
 	return 0, fmt.Errorf("simulated read error")
-}
-
-// MockExpressionVerificationAccessor is a mock of ExpressionVerificationAccessor
-type MockExpressionVerificationAccessor struct {
-	mock.Mock
-}
-
-// VerifyExpressions is a mocked method for expression verification
-func (m *MockExpressionVerificationAccessor) VerifyExpressions(ctx context.Context, input internal.VerifyExpressionsInput) internal.VerifyExpressionsOutput {
-	args := m.Called(ctx, input)
-	return args.Get(0).(internal.VerifyExpressionsOutput)
 }
 
 func TestVerifyCheckConstraintExpressions(t *testing.T) {
