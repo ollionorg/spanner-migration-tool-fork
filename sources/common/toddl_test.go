@@ -438,26 +438,42 @@ func Test_cvtCheckContraint(t *testing.T) {
 	conv := internal.MakeConv()
 	srcSchema := []schema.CheckConstraint{
 		{
-			Id:   "ck1",
-			Name: "check_1",
-			Expr: "age > 0",
+			Id:     "cc1",
+			Name:   "check_1",
+			Expr:   "age > 0",
+			ExprId: "expr1",
 		},
 		{
-			Id:   "ck1",
-			Name: "check_2",
-			Expr: "age < 99",
+			Id:     "cc2",
+			Name:   "check_2",
+			Expr:   "age < 99",
+			ExprId: "expr2",
+		},
+		{
+			Id:     "cc3",
+			Name:   "@invalid_name", // incompatabile name
+			Expr:   "age != 0",
+			ExprId: "expr3",
 		},
 	}
 	spSchema := []ddl.CheckConstraint{
 		{
-			Id:   "ck1",
-			Name: "check_1",
-			Expr: "age > 0",
+			Id:     "cc1",
+			Name:   "check_1",
+			Expr:   "age > 0",
+			ExprId: "expr1",
 		},
 		{
-			Id:   "ck1",
-			Name: "check_2",
-			Expr: "age < 99",
+			Id:     "cc2",
+			Name:   "check_2",
+			Expr:   "age < 99",
+			ExprId: "expr2",
+		},
+		{
+			Id:     "cc3",
+			Name:   "Ainvalid_name",
+			Expr:   "age != 0",
+			ExprId: "expr3",
 		},
 	}
 	result := cvtCheckConstraint(conv, srcSchema)
