@@ -46,7 +46,6 @@ func getRoutes() *mux.Router {
 
 	ctx := context.Background()
 	spanneraccessor, _ := spanneraccessor.NewSpannerAccessorClientImpl(ctx)
-	spClient, _ := spinstanceadmin.NewInstanceAdminClientImpl(ctx)
 	dsClient, _ := ds.NewDatastreamClientImpl(ctx)
 	storageclient, _ := storageclient.NewStorageClientImpl(ctx)
 	validateResourceImpl := conversion.NewValidateResourcesImpl(spanneraccessor, &datastream_accessor.DatastreamAccessorImpl{},
