@@ -1,0 +1,40 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            //WebV2 debugger using global command line mode.
+            "name": "webv2",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/main.go",
+            "args": [
+                "-webv2",
+            ]
+        },
+        {
+            //WebV2 debugger using subcommands mode.
+            "name": "webv2 subcommand",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/main.go",
+            "args": [
+                "web",
+            ]
+        },
+        {
+            //Debugging configuration for schema-and-data command, replace XXX with valid values to start debugging.
+            "name": "schema-and-data",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/main.go",
+            "args": ["schema-and-data", "-source=XXX", "--target-profile=instance=XXX", "--source-profile=host=XXX,port=XXX,user=XXX,password=XXX,dbName=XXX","--log-level=DEBUG"
+            ]
+        }
+    ]
+}

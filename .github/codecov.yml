@@ -1,0 +1,52 @@
+comment:
+  layout: "header, diff, components, files" # show component info in the PR comment
+
+coverage:
+  status:
+    project:
+      default:
+        target: 45%
+        threshold: 5%
+    patch:
+      default:
+        informational: true
+      
+component_management:
+  individual_components:
+    - component_id: backend-apis
+      name: backend-apis # only Golang backend APIs
+      paths:
+        - "webv2/**"
+        - "!webv2/webCmd.go"
+      statuses: # each component has its own status and corresponding configuration
+        - type: project
+          informational: true
+    - component_id: backend-library
+      name: backend-library # only library code
+      paths:
+        - "!webv2/**"
+        - "!ui/**"
+        - "!cmd/**"
+      statuses: # each component has its own status and corresponding configuration
+        - type: project
+          informational: true
+    - component_id: cli 
+      name: cli # only the CLI
+      paths:
+        - "cmd/**"
+        - "webv2/webCmd.go"
+      statuses: # each component has its own status and corresponding configuration
+        - type: project
+          informational: true
+    - component_id: frontend
+      name: frontend # only frontend components
+      paths:
+        - "ui/**"
+      statuses: # the core component has its own statuses
+        - type: project
+          informational: true
+ignore:
+  - ".docker"
+  - ".github"
+  - "docs"
+  - "**/mocks.go"

@@ -1,0 +1,40 @@
+.padding-20 {
+  padding: 5px 0;
+}
+
+.progress-bar-wrapper {
+  // 4px is progress bar height
+  // To keep the page judder free
+  background-color: #cbd0e9;
+  height: 2px;
+
+  .mat-mdc-progress-bar {
+    height: 2px;
+  }
+}
+
+.appLoader{
+  height: 2px;
+}
+
+mat-mdc-sidenav {
+  width: 30%;
+  min-width: 350px;
+}
+
+.sidenav-container {
+  height: 100vh;
+  mat-mdc-sidenav {
+    min-width: 350px;
+    border-radius: 3px;
+  }
+}
+.width-40pc {
+  width: 40%;
+}
+.width-50pc {
+  width: 50%;
+}
+.width-60pc {
+  width: 60%;
+}

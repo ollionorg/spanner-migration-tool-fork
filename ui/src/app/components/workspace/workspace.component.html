@@ -1,0 +1,126 @@
+<div>
+  <div class="header">
+    <div class="breadcrumb vertical-center">
+      <a class="breadcrumb_source" mat-button [routerLink]="'/'">Select Source</a>
+      <span>></span>
+      <a class="breadcrumb_workspace" mat-button [routerLink]="'/workspace'"
+        ><b>Configure Schema ({{dialect}} Dialect)</b></a
+      >
+    </div>
+    <div class="header_action">
+      <span
+        matTooltip="Connect to a spanner instance to run migration"
+        [matTooltipDisabled]="!isOfflineStatus"
+      >
+        <button mat-button (click)="prepareMigration()">
+          PREPARE MIGRATION
+        </button>
+      </span>
+      <button mat-button (click)="openAssessment()">VIEW ASSESSMENT</button>
+      <button mat-button (click)="openSaveSessionSidenav()" *ngIf="!isOfflineStatus">
+        SAVE SESSION
+      </button>
+      <span class="artifactsButtons">
+      <button mat-raised-button color="primary" class="split-button-left" (click)="downloadArtifacts()">
+        DOWNLOAD ARTIFACTS
+      </button>
+      <button mat-raised-button color="primary" class="split-button-right" [matMenuTriggerFor]="menu">
+        <mat-icon aria-hidden="false" aria-label="More options">expand_more</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu" xPosition="before">
+        <button mat-menu-item (click)="downloadTextReport()">Download Text Report</button>
+        <button mat-menu-item (click)="downloadStructuredReport()">Download Structured Report</button>
+        <button mat-menu-item (click)="downloadSession()">Download Session File</button>
+        <button mat-menu-item (click)="downloadDDL()">Download Spanner DDL</button>
+      </mat-menu>
+      </span>
+    </div>
+  </div>
+  <div class="container">
+    <div class="summary">
+      Estimation for {{ srcDbName.toUpperCase() }} to Spanner conversion:
+      {{ conversionRatePercentages.good }}% of tables can be converted automatically,
+      {{ conversionRatePercentages.ok }}% requires minimal conversion changes and
+      {{ conversionRatePercentages.bad }}% requires high complexity conversion changes.
+      <br />
+      To make schema changes go to
+      <a class="spanner-tab-link" (click)="spannerTab()">Spanner Draft</a> pane.
+    </div>
+  </div>
+  <div class="columns">
+    <div
+      class="column-left"
+      [ngClass]="[isLeftColumnCollapse ? 'left-column-collapse' : 'left-column-expand']"
+    >
+      <app-object-explorer
+        (selectedDatabase)="changeCurrentDatabase($event)"
+        (selectObject)="changeCurrentObject($event)"
+        (updateSpannerTable)="updateSpannerTable($event)"
+        (updateSrcTable)="updateSrcTable($event)"
+        (leftCollaspe)="leftColumnToggle()"
+        (middleCollapse)="middleColumnToggle()"
+        [spannerTree]="spannerTree"
+        [srcTree]="srcTree"
+        [srcDbName]="srcDbName"
+      ></app-object-explorer>
+    </div>
+    <div
+      class="column-middle"
+      [ngClass]="{
+        'middle-column-expand': isLeftColumnCollapse,
+        'middle-column-collapse': !isLeftColumnCollapse,
+        'middle-column-full': !isMiddleColumnCollapse,
+        display: isRightColumnCollapse,
+        hidden: !isRightColumnCollapse
+      }"
+    >
+      <app-object-detail
+        [currentObject]="currentObject"
+        (updateSidebar)="reRenderObjectExplorerSpanner()"
+        [tableData]="tableData"
+        [indexData]="indexData"
+        [sequenceData]="sequenceData"
+        [typeMap]="typeMap"
+        [autoGenMap]="autoGenMap"
+        [ddlStmts]="ddlStmts"
+        [fkData]="fkData"
+        [ccData]="ccData"
+        [currentDatabase]="currentDatabase"
+        [defaultTypeMap]="defaultTypeMap"
+      >
+      </app-object-detail>
+    </div>
+
+    <div
+      class="column-right"
+      [ngClass]="{
+        'right-column-half-expand': !isRightColumnCollapse && !isLeftColumnCollapse,
+        'right-column-full-expand': !isRightColumnCollapse && isLeftColumnCollapse,
+        'right-column-collapse': isRightColumnCollapse,
+        'middle-column-hide': !isMiddleColumnCollapse,
+        display: isMiddleColumnCollapse,
+        hidden: !isMiddleColumnCollapse
+      }"
+    >
+      <mat-tab-group>
+        <mat-tab
+          [ngClass]="{ 'blue-font-color': [updateIssuesLabel] }"
+          [label]="issuesAndSuggestionsLabel"
+        >
+          <app-summary
+            [currentObject]="currentObject"
+            (changeIssuesLabel)="updateIssuesLabel($event)"
+          ></app-summary>
+        </mat-tab>
+        <mat-tab [ngClass]="{ 'blue-font-color': [updateRulesLabel] }" [label]="rulesLabel">
+          <app-rule [currentObject]="currentObject" (lengthOfRules)="updateRulesLabel($event)">
+          </app-rule>
+        </mat-tab>
+      </mat-tab-group>
+      <button id="right-column-toggle-button" (click)="rightColumnToggle()">
+        <mat-icon [ngClass]="[isRightColumnCollapse ? 'display' : 'hidden']">first_page</mat-icon>
+        <mat-icon [ngClass]="[isRightColumnCollapse ? 'hidden' : 'display']">last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

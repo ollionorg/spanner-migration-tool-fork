@@ -1,0 +1,94 @@
+<div [formGroup]="addIndexForm">
+  <mat-form-field appearance="outline">
+    <mat-label>For Table</mat-label>
+    <mat-select
+      matSelect
+      class="input-field"
+      (selectionChange)="selectedTableChange($event.value)"
+      formControlName="tableName"
+      required="true"
+    >
+      <mat-option *ngFor="let table of tableNames" [value]="table">{{ table }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Index Name</mat-label>
+    <input matInput class="input-field" formControlName="indexName" />
+    <mat-hint >
+      <div class="container"  style="display: inline;">
+        Max. 128 characters, and starts with a letter.
+        <a href="https://cloud.google.com/spanner/docs/reference/standard-sql/data-definition-language#naming_conventions">More Details</a> 
+      </div>
+    </mat-hint>
+    <mat-hint align="end">{{ addIndexForm.value.indexName?.length || 0 }}/128</mat-hint>
+  </mat-form-field>
+  <ng-container formArrayName="ColsArray" class="addcol-form">
+    <ng-container *ngFor="let colForm of ColsArray.controls; let i = index">
+      <mat-card class="column-form-card">
+        <div [formGroupName]="i">
+          <mat-form-field appearance="outline">
+            <mat-label>Column Name</mat-label>
+            <mat-select
+              (selectionChange)="selectedColumnChange()"
+              matSelect
+              class="input-field"
+              formControlName="columnName"
+              required="true"
+            >
+              <mat-option *ngFor="let col of addColumnsList[i]" [value]="col">{{ col }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Sort</mat-label>
+            <mat-select class="input-field" formControlName="sort" required="true">
+              <mat-option value="false">Ascending</mat-option>
+              <mat-option value="true">Descending</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <button *ngIf="!viewRuleFlag" mat-button color="primary" (click)="removeColumnForm(i)">
+          <mat-icon>remove</mat-icon>
+          <span>REMOVE COLUMN</span>
+        </button>
+      </mat-card>
+    </ng-container>
+    <button
+      *ngIf="addColumnsList.length < totalColumns.length && !viewRuleFlag"
+      mat-button
+      color="primary"
+      (click)="addNewColumnForm()"
+      class="add-column-btn"
+      type="button"
+    >
+      <mat-icon>add</mat-icon>
+      <span>ADD COLUMN</span>
+    </button>
+
+    <br />
+
+    <div *ngIf="!viewRuleFlag">
+      <button
+        class="add-column-btn"
+        mat-raised-button
+        type="submit"
+        color="primary"
+        [disabled]="!(addIndexForm.valid && ruleNameValid && ColsArray.controls.length > 0)"
+        (click)="addIndex()"
+      >
+        ADD RULE
+      </button>
+    </div>
+
+    <div *ngIf="viewRuleFlag">
+      <button
+        class="add-column-btn"
+        mat-raised-button
+        type="submit"
+        color="primary"
+        (click)="deleteRule()"
+      >
+        DELETE RULE
+      </button>
+    </div>
+  </ng-container>
+</div>

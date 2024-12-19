@@ -1,0 +1,36 @@
+.header-container {
+  padding: 0 20px;
+}
+.menu-spacer {
+  flex: 1 1 auto;
+}
+
+.right_container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .spanner_config {
+    margin: 0px 15px 0 0;
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    padding: 0px 10px;
+    button {
+      border-radius: 2px;
+    }
+    span {
+      font-size: 14px;
+      font-weight: 300;
+      padding: 0px 10px;
+    }
+    .pid {
+      margin-right: 10px;
+    }
+    .pointer {
+      cursor: pointer;
+    }
+  }
+}
+.cursor-pointer{
+  color: #3367d6;
+}

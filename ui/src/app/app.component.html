@@ -1,0 +1,33 @@
+<mat-sidenav-container class="sidenav-container" (backdropClick)="closeSidenav()">
+  <mat-sidenav
+    #sidenav
+    position="end"
+    mode="over"
+    [opened]="showSidenav"
+    [ngClass]="{
+      'width-40pc': sidenavComponent === 'rule' || sidenavComponent === 'saveSession',
+      'width-50pc': sidenavComponent === 'reviewChanges',
+      'width-60pc': sidenavComponent === 'assessment' || sidenavComponent === 'instruction'
+    }"
+  >
+    <app-sidenav-rule *ngIf="sidenavComponent === 'rule'"></app-sidenav-rule>
+    <app-sidenav-save-session *ngIf="sidenavComponent == 'saveSession'"></app-sidenav-save-session>
+    <app-sidenav-review-changes
+      *ngIf="sidenavComponent == 'reviewChanges'"
+    ></app-sidenav-review-changes>
+    <app-sidenav-view-assessment
+      *ngIf="sidenavComponent === 'assessment'"
+    ></app-sidenav-view-assessment>
+    <app-instruction *ngIf="sidenavComponent === 'instruction'"></app-instruction>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="sidenav-content">
+    <app-header></app-header>
+    <div class="appLoader">
+      <app-loader></app-loader>
+    </div>
+    <div class="padding-20">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

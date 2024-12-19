@@ -1,0 +1,130 @@
+app-object-detail {
+  height: 100%;
+}
+
+.vertical-center{
+  display: flex;
+  align-items: center;
+}
+
+.columns {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  border-top: 1px solid #d3d3d3;
+  border-bottom: 1px solid #d3d3d3;
+  height: calc(100vh - 222px);
+}
+
+.artifactsButtons {
+  white-space: nowrap;
+}
+
+.container {
+  padding: 7px 20px;
+  margin-bottom: 20px;
+  .summary {
+    font-weight: lighter;
+  }
+  h2 {
+    margin: 0 0 5px 0;
+  }
+}
+.column-left {
+  overflow: auto;
+}
+
+.column-middle {
+  width: 48%;
+  border-left: 1px solid #d3d3d3;
+  border-right: 1px solid #d3d3d3;
+  overflow: auto;
+}
+.column-right {
+  width: 26%;
+  position: relative;
+  overflow: auto;
+}
+
+.left-column-collapse {
+  width: 3%;
+}
+.left-column-expand {
+  width: 26%;
+}
+
+.middle-column-collapse {
+  width: 48%;
+}
+.middle-column-expand {
+  width: 71%;
+}
+
+.right-column-half-expand {
+  width: 80%;
+}
+.right-column-collapse {
+  width: 26%;
+}
+.right-column-full-expand {
+  width: 97%;
+}
+
+.middle-column-hide{
+  width: 0%;
+}
+
+.middle-column-full{
+  width: 100%;
+}
+
+#right-column-toggle-button {
+  border: none;
+  background-color: inherit;
+  position: absolute;
+  top: 10px;
+  right: 7px;
+  z-index: 100;
+}
+#right-column-toggle-button:hover {
+  cursor: pointer;
+}
+
+::ng-deep .column-right .mat-mdc-tab-label .mat-mdc-tab-label-content {
+  font-size: 0.8rem;
+}
+
+::ng-deep .column-right .mat-mdc-tab-label {
+  min-width: 25px !important;
+  padding: 10px;
+}
+
+::ng-deep .column-right .mat-mdc-tab-label.mat-mdc-tab-label-active {
+  min-width: 25px !important;
+  padding: 7px;
+}
+
+::ng-deep .column-right .mat-mdc-tab-label-container {
+  margin-right: 40px;
+}
+::ng-deep .column-right .mat-mdc-tab-header-pagination-controls-enabled .mat-mdc-tab-label-container {
+  margin-right: 0;
+}
+::ng-deep .column-right .mat-mdc-tab-header-pagination-after {
+  margin-right: 40px;
+}
+.split-button-left{
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: none;
+  padding-right: 1px;
+}
+.split-button-right{
+  box-shadow: none;
+  width: 30px !important;
+  min-width: unset !important;
+  padding: 0 2px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-right: 7px;
+}
