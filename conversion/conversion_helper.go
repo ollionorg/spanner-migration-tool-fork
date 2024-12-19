@@ -29,7 +29,6 @@ import (
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/common/constants"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/common/metrics"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/common/utils"
-	"github.com/GoogleCloudPlatform/spanner-migration-tool/expressions_api"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/internal"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/logger"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/profiles"
@@ -46,9 +45,7 @@ type ProcessDumpByDialectInterface interface{
 	ProcessDump(driver string, conv *internal.Conv, r *internal.Reader) error
 }
 
-type ProcessDumpByDialectImpl struct{
-	ExpressionVerificationAccessor expressions_api.ExpressionVerificationAccessor
-}
+type ProcessDumpByDialectImpl struct{}
 
 type PopulateDataConvInterface interface{
 	populateDataConv(conv *internal.Conv, config writer.BatchWriterConfig, client *sp.Client) *writer.BatchWriter
@@ -91,9 +88,9 @@ func getSeekable(f *os.File) (*os.File, int64, error) {
 func (pdd *ProcessDumpByDialectImpl) ProcessDump(driver string, conv *internal.Conv, r *internal.Reader) error {
 	switch driver {
 	case constants.MYSQLDUMP:
-		return common.ProcessDbDump(conv, r, mysql.DbDumpImpl{pdd.ExpressionVerificationAccessor})
+		return common.ProcessDbDump(conv, r, mysql.DbDumpImpl{})
 	case constants.PGDUMP:
-		return common.ProcessDbDump(conv, r, postgres.DbDumpImpl{pdd.ExpressionVerificationAccessor})
+		return common.ProcessDbDump(conv, r, postgres.DbDumpImpl{})
 	default:
 		return fmt.Errorf("process dump for driver %s not supported", driver)
 	}

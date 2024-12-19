@@ -16,7 +16,6 @@ package postgres
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"math/big"
 	"math/bits"
@@ -28,12 +27,10 @@ import (
 
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/common/constants"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/internal"
-	"github.com/GoogleCloudPlatform/spanner-migration-tool/mocks"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/sources/common"
 	"github.com/GoogleCloudPlatform/spanner-migration-tool/spanner/ddl"
 	pg_query "github.com/pganalyze/pg_query_go/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 type spannerData struct {
@@ -1527,16 +1524,7 @@ func runProcessPgDump(s string) (*internal.Conv, []spannerData) {
 	conv := internal.MakeConv()
 	conv.SetLocation(time.UTC)
 	conv.SetSchemaMode()
-	mockAccessor := new(mocks.MockExpressionVerificationAccessor)
-	ctx := context.Background()
-	mockAccessor.On("VerifyExpressions", ctx, mock.Anything).Return(internal.VerifyExpressionsOutput{
-		ExpressionVerificationOutputList: []internal.ExpressionVerificationOutput{
-			{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check1"}, ExpressionId: "expr1"}},
-		},
-	})
-	pgDump := DbDumpImpl{
-		ExpressionVerificationAccessor: mockAccessor,
-	}
+	pgDump := DbDumpImpl{}
 	common.ProcessDbDump(conv, internal.NewReader(bufio.NewReader(strings.NewReader(s)), nil), pgDump)
 	conv.SetDataMode()
 	var rows []spannerData
@@ -1553,16 +1541,7 @@ func runProcessPgDumpPGTarget(s string) (*internal.Conv, []spannerData) {
 	conv.SpDialect = constants.DIALECT_POSTGRESQL
 	conv.SetLocation(time.UTC)
 	conv.SetSchemaMode()
-	mockAccessor := new(mocks.MockExpressionVerificationAccessor)
-	ctx := context.Background()
-	mockAccessor.On("VerifyExpressions", ctx, mock.Anything).Return(internal.VerifyExpressionsOutput{
-		ExpressionVerificationOutputList: []internal.ExpressionVerificationOutput{
-			{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check1"}, ExpressionId: "expr1"}},
-		},
-	})
-	pgDump := DbDumpImpl{
-		ExpressionVerificationAccessor: mockAccessor,
-	}
+	pgDump := DbDumpImpl{}
 	common.ProcessDbDump(conv, internal.NewReader(bufio.NewReader(strings.NewReader(s)), nil), pgDump)
 	conv.SetDataMode()
 	var rows []spannerData

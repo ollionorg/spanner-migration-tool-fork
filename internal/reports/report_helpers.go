@@ -403,25 +403,6 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 						Description: fmt.Sprintf("UNIQUE constraint on column(s) '%s' replaced with primary key since table '%s' didn't have one. Spanner requires a primary key for every table", strings.Join(uniquePK, ", "), conv.SpSchema[tableId].Name),
 					}
 					l = append(l, toAppend)
-				case internal.TypeMismatch:
-					toAppend := Issue{
-						Category:    IssueDB[i].Category,
-						Description: fmt.Sprintf("Table '%s': Type mismatch in '%s'column affecting check constraints. Verify data type compatibility with constraint logic", conv.SpSchema[tableId].Name, conv.SpSchema[tableId].ColDefs[colId].Name),
-					}
-					l = append(l, toAppend)
-				case internal.InvalidCondition:
-					toAppend := Issue{
-						Category:    IssueDB[i].Category,
-						Description: fmt.Sprintf("Table '%s': Invalid condition in '%s' column affecting check constraints. Verify the conditions compatibility with constraint logic", conv.SpSchema[tableId].Name, conv.SpSchema[tableId].ColDefs[colId].Name),
-					}
-					l = append(l, toAppend)
-				case internal.ColumnNotFound:
-					toAppend := Issue{
-						Category:    IssueDB[i].Category,
-						Description: fmt.Sprintf("Table '%s': Column not found which is mention in check constraint condition. Verify the conditions with constraint logic", conv.SpSchema[tableId].Name),
-					}
-					l = append(l, toAppend)
-
 				default:
 					toAppend := Issue{
 						Category:    IssueDB[i].Category,

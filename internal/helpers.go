@@ -26,7 +26,7 @@ import (
 
 type Counter struct {
 	counterMutex sync.Mutex
-	ObjectId     string
+	ObjectId string
 }
 
 var Cntr Counter
@@ -65,15 +65,6 @@ func GenerateForeignkeyId() string {
 func GenerateIndexesId() string {
 	return GenerateId("i")
 }
-
-func GenerateCheckConstrainstId() string {
-	return GenerateId("cc")
-}
-
-func GenerateCheckConstrainstExprId() string {
-	return GenerateId("expr")
-}
-
 func GenerateRuleId() string {
 	return GenerateId("r")
 }
