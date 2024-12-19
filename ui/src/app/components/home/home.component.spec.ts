@@ -23,12 +23,12 @@ describe('HomeComponent', () => {
     await TestBed.configureTestingModule({
 
       declarations: [HomeComponent],
-      imports: [MatMenuModule, MatDialogModule, RouterModule.forRoot(appRoutes), HttpClientModule,MatSnackBarModule],
+      imports: [MatMenuModule, MatDialogModule, RouterModule.forRoot(appRoutes), HttpClientModule, MatSnackBarModule],
       providers: [
         {
           provide: MatDialogRef,
           useValue: {
-            close: () => {},
+            close: () => { },
           },
         },
         { provide: DataService, useValue: { isOffline: isOfflineSubject.asObservable() } },
