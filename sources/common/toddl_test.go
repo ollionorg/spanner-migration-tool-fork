@@ -480,6 +480,115 @@ func Test_cvtCheckContraint(t *testing.T) {
 	assert.Equal(t, spSchema, result)
 }
 
+func TestSpannerSchemaApplyExpressions(t *testing.T) {
+	makeConv := func() *internal.Conv {
+		conv := internal.MakeConv()
+		conv.SchemaIssues = make(map[string]internal.TableIssues)
+		conv.SchemaIssues["table1"] = internal.TableIssues{
+			ColumnLevelIssues: make(map[string][]internal.SchemaIssue),
+		}
+		conv.SpSchema = ddl.Schema{
+			"table1": {
+				ColDefs: map[string]ddl.ColumnDef{
+					"col1": {},
+				},
+			},
+		}
+		return conv
+	}
+
+	makeResultConv := func(SpSchema ddl.Schema, SchemaIssues map[string]internal.TableIssues) *internal.Conv {
+		conv := internal.MakeConv()
+		conv.SpSchema = SpSchema
+		conv.SchemaIssues = SchemaIssues
+		return conv
+	}
+
+	testCases := []struct {
+		name         string
+		conv         *internal.Conv
+		expressions  internal.VerifyExpressionsOutput
+		expectedConv *internal.Conv
+	}{
+		{
+			name: "successful default value application",
+			conv: makeConv(),
+			expressions: internal.VerifyExpressionsOutput{
+				ExpressionVerificationOutputList: []internal.ExpressionVerificationOutput{
+					{
+						Result: true,
+						ExpressionDetail: internal.ExpressionDetail{
+							Type:         "DEFAULT",
+							ExpressionId: "expr1",
+							Expression:   "SELECT 1",
+							Metadata:     map[string]string{"TableId": "table1", "ColId": "col1"},
+						},
+					},
+				},
+			},
+			expectedConv: makeResultConv(
+				ddl.Schema{
+					"table1": {
+						ColDefs: map[string]ddl.ColumnDef{
+							"col1": {
+								DefaultValue: ddl.DefaultValue{
+									IsPresent: true,
+									Value: ddl.Expression{
+										ExpressionId: "expr1",
+										Statement:    "SELECT 1",
+									},
+								},
+							},
+						},
+					},
+				}, map[string]internal.TableIssues{
+					"table1": {
+						ColumnLevelIssues: make(map[string][]internal.SchemaIssue),
+					},
+				}),
+		},
+		{
+			name: "failed default value application",
+			conv: makeConv(),
+			expressions: internal.VerifyExpressionsOutput{
+				ExpressionVerificationOutputList: []internal.ExpressionVerificationOutput{
+					{
+						Result: false,
+						ExpressionDetail: internal.ExpressionDetail{
+							Type:         "DEFAULT",
+							ExpressionId: "expr1",
+							Expression:   "SELECT 1",
+							Metadata:     map[string]string{"TableId": "table1", "ColId": "col1"},
+						},
+					},
+				},
+			},
+			expectedConv: makeResultConv(
+				ddl.Schema{
+					"table1": {
+						ColDefs: map[string]ddl.ColumnDef{
+							"col1": {},
+						},
+					},
+				},
+				map[string]internal.TableIssues{
+					"table1": {
+						ColumnLevelIssues: map[string][]internal.SchemaIssue{
+							"col1": {internal.DefaultValue},
+						},
+					},
+				}),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			spannerSchemaApplyExpressions(tc.conv, tc.expressions)
+			assert.Equal(t, tc.expectedConv, tc.conv)
+		})
+	}
+}
+
 func TestVerifyCheckConstraintExpressions(t *testing.T) {
 	tests := []struct {
 		name                    string
@@ -494,7 +603,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
-				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check1"}, ExpressionId: "expr1"}},
+				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
@@ -508,11 +617,12 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 				{Expr: "(col1 > 18", ExprId: "expr2", Name: "check2"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
-				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check1"}, ExpressionId: "expr1"}},
-				{Result: false, Err: errors.New("Syntax error ..."), ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 18", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check2"}, ExpressionId: "expr2"}},
+				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
+				{Result: false, Err: errors.New("Syntax error ..."), ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 18", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr2"}},
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
+				{Expr: "(col1 > 18", ExprId: "expr2", Name: "check2"},
 			},
 			expectedResponse: true,
 		},
@@ -523,11 +633,12 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
-				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check1"}, ExpressionId: "expr1"}},
-				{Result: false, Err: errors.New("Unrecognized name ..."), ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 18)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check2"}, ExpressionId: "expr2"}},
+				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
+				{Result: false, Err: errors.New("Unrecognized name ..."), ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 18)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr2"}},
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
+				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
 			},
 			expectedResponse: true,
 		},
@@ -538,11 +649,12 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
-				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check1"}, ExpressionId: "expr1"}},
-				{Result: false, Err: errors.New("No matching signature for operator"), ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 18)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1", "colId": "c1", "checkConstraintName": "check2"}, ExpressionId: "expr2"}},
+				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
+				{Result: false, Err: errors.New("No matching signature for operator"), ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 18)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr2"}},
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
+				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
 			},
 			expectedResponse: true,
 		},

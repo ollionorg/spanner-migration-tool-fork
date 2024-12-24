@@ -54,9 +54,9 @@ type Conv struct {
 	UI                 bool                    // Flag if UI interface was used for migration. ToDo: Remove flag after resource generation is introduced to UI
 	SpSequences        map[string]ddl.Sequence // Maps Spanner Sequences to Sequence Schema
 	SrcSequences       map[string]ddl.Sequence // Maps source-DB Sequences to Sequence schema information
-	SpProjectId        string
-	SpInstanceId       string
-	Source             string
+	SpProjectId        string                  // Spanner Project Id
+	SpInstanceId       string                  // Spanner Instance Id
+	Source             string                  // Source Database type being migrated
 }
 
 type TableIssues struct {
@@ -132,6 +132,7 @@ const (
 	ForeignKeyActionNotSupported
 	NumericPKNotSupported
 	TypeMismatch
+	DefaultValueError
 	InvalidCondition
 	ColumnNotFound
 )

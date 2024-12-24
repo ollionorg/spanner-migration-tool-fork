@@ -87,6 +87,7 @@ describe('ObjectDetailComponent', () => {
           Name: '',
           GenerationType: ''
         },
+        srcDefaultValue: '',
       },
       {
         spOrder: 2,
@@ -111,6 +112,7 @@ describe('ObjectDetailComponent', () => {
           Name: '',
           GenerationType: ''
         },
+        srcDefaultValue: '',
       },
     ]
     component.fkData = [

@@ -168,6 +168,9 @@ func (sads *DataFromSourceImpl) dataFromCSV(ctx context.Context, sourceProfile p
 		return nil, fmt.Errorf("dbName is mandatory in target-profile for csv source")
 	}
 	conv.SpDialect = targetProfile.Conn.Sp.Dialect
+	conv.SpProjectId = targetProfile.Conn.Sp.Project
+	conv.SpInstanceId = targetProfile.Conn.Sp.Instance
+	conv.Source = sourceProfile.Driver
 	dialect, err := targetProfile.FetchTargetDialect(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch dialect: %v", err)

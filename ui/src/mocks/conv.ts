@@ -74,6 +74,13 @@ const mockIConv: IConv = {
                         Name: "",
                         GenerationType: ""
                     },
+                    DefaultValue: {
+                        Value: {
+                            Statement: "",
+                            ExpressionId: ""
+                        },
+                        IsPresent: false
+                    },
                 }
             },
             PrimaryKeys: [],
@@ -210,6 +217,13 @@ export const mockIConv2: IConv = {
                         Name: "",
                         GenerationType: ""
                     },
+                    DefaultValue: {
+                        Value: {
+                            Statement: "",
+                            ExpressionId: ""
+                        },
+                        IsPresent: false
+                    }
                 }
             },
             CheckConstraints:[],
