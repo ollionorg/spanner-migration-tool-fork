@@ -112,7 +112,7 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 		}
 
 		// added if to add table level issue
-		if p.severity == warning && len(tableLevelIssues) != 0 {
+		if p.severity == Errors && len(tableLevelIssues) != 0 {
 			for _, issue := range tableLevelIssues {
 				switch issue {
 				case internal.TypeMismatch:
