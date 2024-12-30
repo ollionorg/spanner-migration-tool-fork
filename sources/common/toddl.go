@@ -67,6 +67,7 @@ var ErrorTypeMapping = map[string]internal.SchemaIssue{
 	"No matching signature for operator": internal.TypeMismatch,
 	"Syntax error":                       internal.InvalidCondition,
 	"Unrecognized name":                  internal.ColumnNotFound,
+	"Function not found":                 internal.FunctionNotFound,
 }
 
 // SchemaToSpannerDDL performs schema conversion from the source DB schema to
