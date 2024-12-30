@@ -89,6 +89,15 @@ To interleave a `child table` within a `parent table`, the following conditions 
 ### Check Constraints
 Users can view and edit the check constraints of a table from the check constraints tab. They can modify the check constraint name, condition and drop the check constraint. Once these changes are made the [session file](../ui.md/#termsterminology) is updated.
 
+![](https://services.google.com/fh/files/misc/cc3.png)
+![](https://services.google.com/fh/files/misc/cc4.png)
+
+#### Add Constraints
+In addition to editing the existing check constraint in the Spanner draft mapped from the source database, users can also add new constraint to the selected table.
+
+![](https://services.google.com/fh/files/misc/cc2.png)
+![](https://services.google.com/fh/files/misc/cc1.png)
+
 ### SQL
 
 Once the user is done with all the schema modifications they can then visit the SQL tab which shows the Spanner DDL for the modified schema.
