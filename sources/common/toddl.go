@@ -68,6 +68,7 @@ var ErrorTypeMapping = map[string]internal.SchemaIssue{
 	"Syntax error":                       internal.InvalidCondition,
 	"Unrecognized name":                  internal.ColumnNotFound,
 	"Function not found":                 internal.FunctionNotFound,
+	"unhandled error":                    internal.GenericError,
 }
 
 // SchemaToSpannerDDL performs schema conversion from the source DB schema to
@@ -152,7 +153,7 @@ func GetIssue(result internal.VerifyExpressionsOutput) map[string][]internal.Sch
 			case strings.Contains(ev.Err.Error(), "Function not found"):
 				issue = internal.FunctionNotFound
 			default:
-				issue = internal.UnhandleError
+				issue = internal.GenericError
 			}
 			issues[tableId] = append(issues[tableId], issue)
 

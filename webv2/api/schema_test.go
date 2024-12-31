@@ -2713,7 +2713,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			expectedResponse: true,
 		},
 		{
-			name: "UnhandleError",
+			name: "GenericError",
 			expressions: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},

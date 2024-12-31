@@ -136,7 +136,7 @@ const (
 	InvalidCondition
 	ColumnNotFound
 	FunctionNotFound
-	UnhandleError
+	GenericError
 )
 
 const (
