@@ -867,14 +867,14 @@ export class ObjectDetailComponent implements OnInit {
       srcSno: '',
       srcCondition: '',
       srcConstraintName: '',
-      spExprId:this.generateId(),
+      spExprId:this.generateExpressionId(),
       deleteIndex: `cc${index + 1}`,
     });
 
     this.setCCRows();
   }
 
-   generateId(): string {
+   generateExpressionId(): string {
     const min = 0;
     const max = 999;
 
@@ -882,7 +882,7 @@ export class ObjectDetailComponent implements OnInit {
 
     const twoDigitNum = randomNum.toString().padStart(2, '0');
 
-    const id = `expr${twoDigitNum}`;
+    const id = `e${twoDigitNum}`;
     return id;
   }
 
