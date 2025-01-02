@@ -68,7 +68,7 @@ var ErrorTypeMapping = map[string]internal.SchemaIssue{
 	"No matching signature for operator": internal.TypeMismatch,
 	"Syntax error":                       internal.InvalidCondition,
 	"Unrecognized name":                  internal.ColumnNotFound,
-	"Function not found":                 internal.CheckConstraintFunctionNotFOund,
+	"Function not found":                 internal.CheckConstraintFunctionNotFound,
 	"unhandled error":                    internal.GenericError,
 }
 
@@ -163,7 +163,7 @@ func GetIssue(result internal.VerifyExpressionsOutput) map[string][]internal.Sch
 			case strings.Contains(ev.Err.Error(), "Unrecognized name"):
 				issue = internal.ColumnNotFound
 			case strings.Contains(ev.Err.Error(), "Function not found"):
-				issue = internal.CheckConstraintFunctionNotFOund
+				issue = internal.CheckConstraintFunctionNotFound
 			default:
 				issue = internal.GenericError
 			}

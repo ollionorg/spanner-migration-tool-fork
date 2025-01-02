@@ -134,7 +134,7 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 					}
 					l = append(l, toAppend)
 
-				case internal.CheckConstraintFunctionNotFOund:
+				case internal.CheckConstraintFunctionNotFound:
 					toAppend := Issue{
 						Category:    IssueDB[issue].Category,
 						Description: fmt.Sprintf("Table '%s': Function not found in check constraint. Ensure all functions used in the condition are valid.", conv.SpSchema[tableId].Name),
@@ -564,7 +564,7 @@ var IssueDB = map[internal.SchemaIssue]struct {
 	internal.TypeMismatch:                    {Brief: "Type mismatch in check constraint mention in table", Severity: warning, Category: "TYPE_MISMATCH"},
 	internal.InvalidCondition:                {Brief: "Invalid condition in check constraint mention in table", Severity: warning, Category: "INVALID_CONDITION"},
 	internal.ColumnNotFound:                  {Brief: "Column not found in check constraint mention in the table", Severity: warning, Category: "COLUMN_NOT_FOUND"},
-	internal.CheckConstraintFunctionNotFOund: {Brief: "Function not found in check constraint mention in the table", Severity: warning, Category: "FUNCTION_NOT_FOUND"},
+	internal.CheckConstraintFunctionNotFound: {Brief: "Function not found in check constraint mention in the table", Severity: warning, Category: "FUNCTION_NOT_FOUND"},
 	internal.GenericError:                    {Brief: "Something went wrong", Severity: warning, Category: "UNHANDLE_ERROR"},
 	internal.ForeignKey:                      {Brief: "Spanner does not support foreign keys", Severity: warning, Category: "FOREIGN_KEY_USES"},
 	internal.MultiDimensionalArray:           {Brief: "Spanner doesn't support multi-dimensional arrays", Severity: warning, Category: "MULTI_DIMENSIONAL_ARRAY_USES"},
