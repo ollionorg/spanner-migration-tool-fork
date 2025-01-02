@@ -342,7 +342,7 @@ func getCheckConstraints(constraints []*ast.Constraint) (checkConstraints []sche
 			checkConstraint := schema.CheckConstraint{
 				Name:   constraint.Name,
 				Expr:   exp,
-				ExprId: internal.GenerateCheckConstrainstExprId(),
+				ExprId: internal.GenerateExpressionId(),
 				Id:     internal.GenerateCheckConstrainstId(),
 			}
 			checkConstraints = append(checkConstraints, checkConstraint)
