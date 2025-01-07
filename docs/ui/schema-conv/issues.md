@@ -35,6 +35,8 @@ Spanner migration tool scans through the generated spanner schema and notifies t
 - Data type mismatch of referenced column in check constraints.
 - Referenced column in check constraints not found.
 
+![](https://services.google.com/fh/files/misc/cc5.png)
+
 ## Suggestions
 
 - Modifications related to converting a table into an interleaved one
