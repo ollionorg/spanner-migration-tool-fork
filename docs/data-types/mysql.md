@@ -146,7 +146,7 @@ It can be manually added to the DDL via an `ALTER TABLE` command.
 
 While Spanner supports check constraints, the Spanner migration tool currently migrates all valid check constraints from MySQL to Spanner.
 
-If any unsupported or invalid check constraints are found during the migration preparation phase, errors should be shown in the Issues & Suggestions tab. These check constraints can then be manually removed.  
+If any unsupported or invalid check constraints are found during the migration preparation phase, errors should be shown in the Issues & Suggestions tab. These check constraints can then be manually fixed or removed.  
 
 > Note: This feature is only available for MySQL versions 8.0.16 and above. For versions below this, users can manually add check constraints using the Spanner migration tool (SMT).
 
