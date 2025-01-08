@@ -18,8 +18,7 @@
 -- Current Database: `test_mysql_checkconstraint_actions`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `test_mysql_checkconstraint_actions` /*!40100 DEFAULT */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
+CREATE DATABASE IF NOT EXISTS test_mysql_checkconstraint_actions
 USE `test_mysql_checkconstraint_actions`;
 
 --
