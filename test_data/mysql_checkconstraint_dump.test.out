@@ -18,8 +18,8 @@
 -- Current Database: `test_mysql_checkconstraint_actions`
 --
 
-CREATE DATABASE IF NOT EXISTS test_mysql_checkconstraint_actions
-USE `test_mysql_checkconstraint_actions`;
+CREATE DATABASE IF NOT EXISTS test_mysql_checkconstraint_actions;
+USE test_mysql_checkconstraint_actions;
 
 --
 -- Table structure for table `TestTable`
