@@ -7,7 +7,6 @@
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -19,7 +18,7 @@
 -- Current Database: `test_mysql_checkconstraint_actions`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `test_mysql_checkconstraint_actions` /*!40100 DEFAULT CHARACTER SET utf8mb4 */ /*!80016 DEFAULT ENCRYPTION='N' */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `test_mysql_checkconstraint_actions` /*!40100 DEFAULT */ /*!80016 DEFAULT ENCRYPTION='N' */;
 
 USE `test_mysql_checkconstraint_actions`;
 
@@ -29,7 +28,6 @@ USE `test_mysql_checkconstraint_actions`;
 
 DROP TABLE IF EXISTS `TestTable`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `TestTable` (
   `ID` bigint NOT NULL,
   `Value` bigint DEFAULT NULL,
@@ -46,7 +44,7 @@ CREATE TABLE `TestTable` (
   CONSTRAINT `chk_NullValue` CHECK ((`Value` is not null)),
   CONSTRAINT `chk_range` CHECK (((`Value` > 10) and (`Value` < 1000))),
   CONSTRAINT `chk_StringLength` CHECK ((char_length(`Name`) > 5))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
