@@ -430,13 +430,13 @@ type AutoGenCol struct {
 
 // DefaultValue represents a Default value.
 type DefaultValue struct {
-	IsPresent bool
-	Value     Expression
+	IsPresent bool       `json:"IsPresent"`
+	Value     Expression `json:"Value"`
 }
 
 type Expression struct {
-	ExpressionId string
-	Statement    string
+	ExpressionId string `json:"ExpressionId"`
+	Statement    string `json:"Statement"`
 }
 
 func (dv DefaultValue) PrintDefaultValue(ty Type) string {
