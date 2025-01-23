@@ -147,7 +147,7 @@ func RemoveError(tableIssues map[string]internal.TableIssues) map[string]interna
 
 }
 
-// removeCheckConstraint this method will remove the constraint which has error
+// RemoveCheckConstraint this method will remove the constraint which has error
 func RemoveCheckConstraint(checkConstraints []ddl.CheckConstraint, expId string) []ddl.CheckConstraint {
 	var filteredConstraints []ddl.CheckConstraint
 
