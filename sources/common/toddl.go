@@ -148,7 +148,7 @@ func RemoveError(tableIssues map[string]internal.TableIssues) map[string]interna
 }
 
 // removeCheckConstraint this method will remove the constraint which has error
-func removeCheckConstraint(checkConstraints []ddl.CheckConstraint, expId string) []ddl.CheckConstraint {
+func RemoveCheckConstraint(checkConstraints []ddl.CheckConstraint, expId string) []ddl.CheckConstraint {
 	var filteredConstraints []ddl.CheckConstraint
 
 	for _, checkConstraint := range checkConstraints {
@@ -241,7 +241,7 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 			for tableId, expressionIdList := range invalidExpIds {
 				for _, expId := range expressionIdList {
 					spschema := conv.SpSchema[tableId]
-					spschema.CheckConstraints = removeCheckConstraint(spschema.CheckConstraints, expId)
+					spschema.CheckConstraints = RemoveCheckConstraint(spschema.CheckConstraints, expId)
 					conv.SpSchema[tableId] = spschema
 				}
 			}
