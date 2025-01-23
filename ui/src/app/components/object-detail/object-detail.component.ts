@@ -479,7 +479,13 @@ export class ObjectDetailComponent implements OnInit {
             ToType: (this.conv.SpDialect === Dialect.PostgreSQLDialect) ? (standardDataType === undefined ? col.spDataType : standardDataType) : col.spDataType,
             MaxColLength: col.spColMaxLength,
             AutoGen: col.spAutoGen,
-            DefaultValue: col.spDefaultValue,
+            DefaultValue: {
+              IsPresent: col.spDefaultValue ? true : false,
+              Value: {
+                ExpressionId: '',
+                Statement: String(col.spDefaultValue)
+              }
+            }
           }
         }
       }
