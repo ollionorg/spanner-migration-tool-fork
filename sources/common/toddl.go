@@ -163,7 +163,7 @@ func removeCheckConstraint(checkConstraints []ddl.CheckConstraint, expId string)
 func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.SchemaIssue, map[string][]string) {
 	exprOutputsByTable := make(map[string][]internal.ExpressionVerificationOutput)
 	issues := make(map[string][]internal.SchemaIssue)
-	invalidExpId := make(map[string][]string)
+	invalidExpIds := make(map[string][]string)
 	for _, ev := range result.ExpressionVerificationOutputList {
 		if !ev.Result {
 			tableId := ev.ExpressionDetail.Metadata["tableId"]
@@ -189,13 +189,13 @@ func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.Sc
 				issue = internal.GenericError
 			}
 			issues[tableId] = append(issues[tableId], issue)
-			invalidExpId[tableId] = append(invalidExpId[tableId], ev.ExpressionDetail.ExpressionId)
+			invalidExpIds[tableId] = append(invalidExpIds[tableId], ev.ExpressionDetail.ExpressionId)
 
 		}
 
 	}
 
-	return issues, invalidExpId
+	return issues, invalidExpIds
 
 }
 
