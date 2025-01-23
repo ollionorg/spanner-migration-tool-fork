@@ -618,6 +618,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			expressions: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 				{Expr: "(col1 > 18", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
 				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
@@ -625,7 +626,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
-				{Expr: "(col1 > 18", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResponse: true,
 		},
@@ -634,6 +635,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			expressions: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
 				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
@@ -641,7 +643,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
-				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResponse: true,
 		},
@@ -650,6 +652,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			expressions: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
 				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
@@ -657,7 +660,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
-				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResponse: true,
 		},
@@ -666,6 +669,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			expressions: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
 				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
@@ -673,7 +677,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
-				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResponse: true,
 		},
@@ -682,6 +686,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			expressions: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
 				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResults: []internal.ExpressionVerificationOutput{
 				{Result: true, Err: nil, ExpressionDetail: internal.ExpressionDetail{Expression: "(col1 > 0)", Type: "CHECK", Metadata: map[string]string{"tableId": "t1"}, ExpressionId: "expr1"}},
@@ -689,7 +694,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			},
 			expectedCheckConstraint: []ddl.CheckConstraint{
 				{Expr: "(col1 > 0)", ExprId: "expr1", Name: "check1"},
-				{Expr: "(col1 > 18)", ExprId: "expr2", Name: "check2"},
+				{Expr: "(col1 > 18)", ExprId: "expr3", Name: "check3"},
 			},
 			expectedResponse: true,
 		},
