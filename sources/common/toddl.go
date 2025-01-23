@@ -147,10 +147,23 @@ func RemoveError(tableIssues map[string]internal.TableIssues) map[string]interna
 
 }
 
+// removeCheckConstraint this method will remove the constraint which has error
+func removeCheckConstraint(checkConstraints []ddl.CheckConstraint, expId string) []ddl.CheckConstraint {
+	var filteredConstraints []ddl.CheckConstraint
+
+	for _, checkConstraint := range checkConstraints {
+		if checkConstraint.ExprId != expId {
+			filteredConstraints = append(filteredConstraints, checkConstraint)
+		}
+	}
+	return filteredConstraints
+}
+
 // GetIssue it will collect all the error and return it
-func GetIssue(result internal.VerifyExpressionsOutput) map[string][]internal.SchemaIssue {
+func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.SchemaIssue, map[string][]string) {
 	exprOutputsByTable := make(map[string][]internal.ExpressionVerificationOutput)
 	issues := make(map[string][]internal.SchemaIssue)
+	invalidExpIds := make(map[string][]string)
 	for _, ev := range result.ExpressionVerificationOutputList {
 		if !ev.Result {
 			tableId := ev.ExpressionDetail.Metadata["tableId"]
@@ -176,12 +189,13 @@ func GetIssue(result internal.VerifyExpressionsOutput) map[string][]internal.Sch
 				issue = internal.GenericError
 			}
 			issues[tableId] = append(issues[tableId], issue)
+			invalidExpIds[tableId] = append(invalidExpIds[tableId], ev.ExpressionDetail.ExpressionId)
 
 		}
 
 	}
 
-	return issues
+	return issues, invalidExpIds
 
 }
 
@@ -202,7 +216,7 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 		if result.ExpressionVerificationOutputList == nil {
 			return result.Err
 		}
-		issueTypes := GetIssue(result)
+		issueTypes, invalidExpIds := GetIssue(result)
 		if len(issueTypes) > 0 {
 			for tableId, issues := range issueTypes {
 
@@ -219,6 +233,16 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 						tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue)
 					}
 					conv.SchemaIssues[tableId] = tableIssue
+				}
+			}
+		}
+
+		if len(invalidExpIds) > 0 {
+			for tableId, expressionIdList := range invalidExpIds {
+				for _, expId := range expressionIdList {
+					spschema := conv.SpSchema[tableId]
+					spschema.CheckConstraints = removeCheckConstraint(spschema.CheckConstraints, expId)
+					conv.SpSchema[tableId] = spschema
 				}
 			}
 		}
