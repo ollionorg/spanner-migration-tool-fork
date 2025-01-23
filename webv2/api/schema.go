@@ -626,7 +626,7 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 			return
 		}
 
-		issueTypes := common.GetIssue(result)
+		issueTypes, _ := common.GetIssue(result)
 		if len(issueTypes) > 0 {
 			hasErrorOccurred = true
 			for tableId, issues := range issueTypes {
