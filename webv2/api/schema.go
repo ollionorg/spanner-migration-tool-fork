@@ -644,7 +644,7 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 			return
 		}
 
-		issueTypes := common.GetIssue(result)
+		issueTypes, invalidExpIds := common.GetIssue(result)
 		if len(issueTypes) > 0 {
 			hasErrorOccurred = true
 			for tableId, issues := range issueTypes {
@@ -662,6 +662,16 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 					}
 
 					sessionState.Conv.SchemaIssues[tableId] = tableIssue
+				}
+			}
+		}
+
+		if len(invalidExpIds) > 0 {
+			for tableId, expressionIdList := range invalidExpIds {
+				for _, expId := range expressionIdList {
+					spschema := sessionState.Conv.SpSchema[tableId]
+					spschema.CheckConstraints = common.RemoveCheckConstraint(spschema.CheckConstraints, expId)
+					sessionState.Conv.SpSchema[tableId] = spschema
 				}
 			}
 		}
