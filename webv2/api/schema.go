@@ -622,7 +622,7 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 		sessionState.Conv.SchemaIssues = common.RemoveError(sessionState.Conv.SchemaIssues)
 		result := expressionVerificationHandler.ExpressionVerificationAccessor.VerifyExpressions(ctx, verifyExpressionsInput)
 		if result.ExpressionVerificationOutputList == nil {
-			http.Error(w, fmt.Sprintf("Unhandled error: : %s", result.Err.Error()), http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("Unhandled error: : %s", result.Err.Error()), http.StatusInternalServerError)
 			return
 		}
 
