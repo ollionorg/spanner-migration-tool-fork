@@ -417,7 +417,7 @@ export class DataService {
     );
   }
 
-  verifyCheckConstraintExpression(): Observable<string> {
+  verifyCheckConstraintExpression(): Observable<boolean> {
     return this.fetch.verifyCheckConstraintExpression().pipe(
       catchError((error: any) => {
         return of(`Error: ${error.message || 'Unknown error'}`);
