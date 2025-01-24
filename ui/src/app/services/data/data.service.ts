@@ -417,6 +417,24 @@ export class DataService {
     );
   }
 
+  verifyCheckConstraintExpression(): Observable<string> {
+    return this.fetch.verifyCheckConstraintExpression().pipe(
+      catchError((error: any) => {
+        return of(`Error: ${error.message || 'Unknown error'}`);
+      }),
+      tap(response => console.log('Update Response:', response)),
+      map((response: any) => {
+        if (response.error) {
+          return response.error;
+        } else {
+          this.convSubject.next(response.sessionState);
+          this.getDdl();
+          return response.hasErrorOccurred;
+        }
+      })
+    );
+  }
+
   updateFkNames(tableId: string, updatedFk: IForeignKey[]): Observable<string> {
     return this.fetch.updateFk(tableId, updatedFk).pipe(
       catchError((e: any) => {
