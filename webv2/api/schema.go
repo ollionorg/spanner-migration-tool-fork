@@ -678,8 +678,17 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 
 		session.UpdateSessionFile()
 	}
+	convm := session.ConvWithMetadata{
+		SessionMetadata: sessionState.SessionMetadata,
+		Conv:            *sessionState.Conv,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(hasErrorOccurred)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"hasErrorOccurred": hasErrorOccurred,
+		"sessionState":     convm,
+	})
 }
 
 // renameForeignKeys checks the new names for spanner name validity, ensures the new names are already not used by existing tables
