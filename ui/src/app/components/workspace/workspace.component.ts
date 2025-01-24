@@ -426,7 +426,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy {
             maxWidth: '500px',
           })
         } else {
-          this.fetch.verifyCheckConstraintExpression().subscribe((res:any)=>{
+          this.data.verifyCheckConstraints().subscribe((res:any)=>{
             if(!res){
               this.router.navigate(['/prepare-migration'])
             }
