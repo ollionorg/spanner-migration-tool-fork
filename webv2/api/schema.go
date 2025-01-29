@@ -637,6 +637,7 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 					sessionState.Conv.InvalidCheckExp[tableId] = []internal.InvalidCheckExp{}
 				}
 
+				sessionState.Conv.InvalidCheckExp[tableId] = []internal.InvalidCheckExp{}
 				invalidCheckExp := sessionState.Conv.InvalidCheckExp[tableId]
 				invalidCheckExp = append(invalidCheckExp, issues...)
 				sessionState.Conv.InvalidCheckExp[tableId] = invalidCheckExp
