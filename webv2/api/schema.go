@@ -582,6 +582,10 @@ func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for i := range newCc {
+		newCc[i].Expr = checkAndAddParentheses(newCc[i].Expr)
+	}
+
 	sp := sessionState.Conv.SpSchema[tableId]
 	sp.CheckConstraints = newCc
 	sessionState.Conv.SpSchema[tableId] = sp
@@ -593,6 +597,20 @@ func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(convm)
+}
+
+// checkAndAddParentheses this method will check parentheses  if found it will return same string
+// or add the parentheses then return the string
+func checkAndAddParentheses(checkClause string) string {
+	if strings.HasPrefix(checkClause, "(") && strings.HasSuffix(checkClause, ")") {
+		return checkClause
+	} else if strings.HasPrefix(checkClause, "(") {
+		return checkClause + `)`
+	} else if strings.HasSuffix(checkClause, ")") {
+		return `(` + checkClause
+	} else {
+		return `(` + checkClause + `)`
+	}
 }
 
 // VerifyExpression this function will use expression_api to validate check constraint expressions and add the relevant error
@@ -622,14 +640,24 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 		sessionState.Conv.SchemaIssues = common.RemoveError(sessionState.Conv.SchemaIssues)
 		result := expressionVerificationHandler.ExpressionVerificationAccessor.VerifyExpressions(ctx, verifyExpressionsInput)
 		if result.ExpressionVerificationOutputList == nil {
-			http.Error(w, fmt.Sprintf("Unhandled error: : %s", result.Err.Error()), http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("Unhandled error: : %s", result.Err.Error()), http.StatusInternalServerError)
 			return
 		}
 
-		issueTypes := common.GetIssue(result)
+		issueTypes := common.GetErroredIssue(result)
 		if len(issueTypes) > 0 {
 			hasErrorOccurred = true
 			for tableId, issues := range issueTypes {
+
+				if sessionState.Conv.InvalidCheckExp == nil {
+					sessionState.Conv.InvalidCheckExp = map[string][]internal.InvalidCheckExp{}
+					sessionState.Conv.InvalidCheckExp[tableId] = []internal.InvalidCheckExp{}
+				}
+
+				invalidCheckExp := sessionState.Conv.InvalidCheckExp[tableId]
+				invalidCheckExp = append(invalidCheckExp, issues...)
+				sessionState.Conv.InvalidCheckExp[tableId] = invalidCheckExp
+
 				for _, issue := range issues {
 					if _, exists := sessionState.Conv.SchemaIssues[tableId]; !exists {
 						sessionState.Conv.SchemaIssues[tableId] = internal.TableIssues{
@@ -638,11 +666,7 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 					}
 
 					tableIssue := sessionState.Conv.SchemaIssues[tableId]
-
-					if !utilities.IsSchemaIssuePresent(tableIssue.TableLevelIssues, issue) {
-						tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue)
-					}
-
+					tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue.IssueType)
 					sessionState.Conv.SchemaIssues[tableId] = tableIssue
 				}
 			}
@@ -650,8 +674,17 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 
 		session.UpdateSessionFile()
 	}
+
+	convm := session.ConvWithMetadata{
+		SessionMetadata: sessionState.SessionMetadata,
+		Conv:            *sessionState.Conv,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(hasErrorOccurred)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"hasErrorOccurred": hasErrorOccurred,
+		"sessionState":     convm,
+	})
 }
 
 // renameForeignKeys checks the new names for spanner name validity, ensures the new names are already not used by existing tables
