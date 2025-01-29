@@ -649,14 +649,14 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 			hasErrorOccurred = true
 			for tableId, issues := range issueTypes {
 
-				if sessionState.Conv.InvalidExpIds == nil {
-					sessionState.Conv.InvalidExpIds = map[string][]internal.CustomIssue{}
-					sessionState.Conv.InvalidExpIds[tableId] = []internal.CustomIssue{}
+				if sessionState.Conv.InvalidCheckExp == nil {
+					sessionState.Conv.InvalidCheckExp = map[string][]internal.InvalidCheckExp{}
+					sessionState.Conv.InvalidCheckExp[tableId] = []internal.InvalidCheckExp{}
 				}
 
-				spIve := sessionState.Conv.InvalidExpIds[tableId]
-				spIve = append(spIve, issues...)
-				sessionState.Conv.InvalidExpIds[tableId] = spIve
+				invalidCheckExp := sessionState.Conv.InvalidCheckExp[tableId]
+				invalidCheckExp = append(invalidCheckExp, issues...)
+				sessionState.Conv.InvalidCheckExp[tableId] = invalidCheckExp
 
 				for _, issue := range issues {
 					if _, exists := sessionState.Conv.SchemaIssues[tableId]; !exists {

@@ -153,9 +153,9 @@ func RemoveError(tableIssues map[string]internal.TableIssues) map[string]interna
 // }
 
 // GetIssue it will collect all the error and return it
-func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.CustomIssue, map[string][]string) {
+func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.InvalidCheckExp, map[string][]string) {
 	exprOutputsByTable := make(map[string][]internal.ExpressionVerificationOutput)
-	issues := make(map[string][]internal.CustomIssue)
+	issues := make(map[string][]internal.InvalidCheckExp)
 	invalidExpIds := make(map[string][]string)
 	for _, ev := range result.ExpressionVerificationOutputList {
 		if !ev.Result {
@@ -181,7 +181,7 @@ func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.Cu
 			default:
 				issue = internal.GenericError
 			}
-			issues[tableId] = append(issues[tableId], internal.CustomIssue{
+			issues[tableId] = append(issues[tableId], internal.InvalidCheckExp{
 				IssueType:  issue,
 				Expression: ev.ExpressionDetail.Expression,
 			})
@@ -196,9 +196,9 @@ func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.Cu
 }
 
 // GetErroredIssue it will collect all the error and return it
-func GetErroredIssue(result internal.VerifyExpressionsOutput) map[string][]internal.CustomIssue {
+func GetErroredIssue(result internal.VerifyExpressionsOutput) map[string][]internal.InvalidCheckExp {
 	exprOutputsByTable := make(map[string][]internal.ExpressionVerificationOutput)
-	issues := make(map[string][]internal.CustomIssue)
+	issues := make(map[string][]internal.InvalidCheckExp)
 	for _, ev := range result.ExpressionVerificationOutputList {
 		if !ev.Result {
 			tableId := ev.ExpressionDetail.Metadata["tableId"]
@@ -223,7 +223,7 @@ func GetErroredIssue(result internal.VerifyExpressionsOutput) map[string][]inter
 			default:
 				issue = internal.GenericError
 			}
-			issues[tableId] = append(issues[tableId], internal.CustomIssue{
+			issues[tableId] = append(issues[tableId], internal.InvalidCheckExp{
 				IssueType:  issue,
 				Expression: ev.ExpressionDetail.Expression,
 			})
@@ -269,14 +269,14 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 		if len(issueTypes) > 0 {
 			for tableId, issues := range issueTypes {
 
-				if conv.InvalidExpIds == nil {
-					conv.InvalidExpIds = map[string][]internal.CustomIssue{}
-					conv.InvalidExpIds[tableId] = []internal.CustomIssue{}
+				if conv.InvalidCheckExp == nil {
+					conv.InvalidCheckExp = map[string][]internal.InvalidCheckExp{}
+					conv.InvalidCheckExp[tableId] = []internal.InvalidCheckExp{}
 				}
 
-				spIve := conv.InvalidExpIds[tableId]
-				spIve = append(spIve, issues...)
-				conv.InvalidExpIds[tableId] = spIve
+				invalidCheckExp := conv.InvalidCheckExp[tableId]
+				invalidCheckExp = append(invalidCheckExp, issues...)
+				conv.InvalidCheckExp[tableId] = invalidCheckExp
 
 				for _, issue := range issues {
 					if _, exists := conv.SchemaIssues[tableId]; !exists {

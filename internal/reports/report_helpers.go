@@ -112,9 +112,9 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 		}
 
 		// added if to add table level issue
-		if p.severity == warning && len(conv.InvalidExpIds[tableId]) != 0 {
+		if p.severity == warning && len(conv.InvalidCheckExp[tableId]) != 0 {
 
-			for _, invalidExp := range conv.InvalidExpIds[tableId] {
+			for _, invalidExp := range conv.InvalidCheckExp[tableId] {
 				switch invalidExp.IssueType {
 				case internal.TypeMismatch:
 					toAppend := Issue{
@@ -152,9 +152,9 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 
 		}
 
-		if p.severity == Errors && len(conv.InvalidExpIds[tableId]) != 0 {
+		if p.severity == Errors && len(conv.InvalidCheckExp[tableId]) != 0 {
 
-			for _, invalidExp := range conv.InvalidExpIds[tableId] {
+			for _, invalidExp := range conv.InvalidCheckExp[tableId] {
 				switch invalidExp.IssueType {
 				case internal.TypeMismatchError:
 					toAppend := Issue{

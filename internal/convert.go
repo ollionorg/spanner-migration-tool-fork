@@ -29,15 +29,15 @@ import (
 
 // Conv contains all schema and data conversion state.
 type Conv struct {
-	mode               mode                     // Schema mode or data mode.
-	SpSchema           ddl.Schema               // Maps Spanner table name to Spanner schema.
-	SyntheticPKeys     map[string]SyntheticPKey // Maps Spanner table name to synthetic primary key (if needed).
-	SrcSchema          map[string]schema.Table  // Maps source-DB table name to schema information.
-	SchemaIssues       map[string]TableIssues   // Maps source-DB table/col to list of schema conversion issues.
-	InvalidExpIds      map[string][]CustomIssue
-	ToSpanner          map[string]NameAndCols `json:"-"` // Maps from source-DB table name to Spanner name and column mapping.
-	ToSource           map[string]NameAndCols `json:"-"` // Maps from Spanner table name to source-DB table name and column mapping.
-	UsedNames          map[string]bool        `json:"-"` // Map storing the names that are already assigned to tables, indices or foreign key contraints.
+	mode               mode                         // Schema mode or data mode.
+	SpSchema           ddl.Schema                   // Maps Spanner table name to Spanner schema.
+	SyntheticPKeys     map[string]SyntheticPKey     // Maps Spanner table name to synthetic primary key (if needed).
+	SrcSchema          map[string]schema.Table      // Maps source-DB table name to schema information.
+	SchemaIssues       map[string]TableIssues       // Maps source-DB table/col to list of schema conversion issues.
+	InvalidCheckExp    map[string][]InvalidCheckExp // list of check constraints expression and issues list.
+	ToSpanner          map[string]NameAndCols       `json:"-"` // Maps from source-DB table name to Spanner name and column mapping.
+	ToSource           map[string]NameAndCols       `json:"-"` // Maps from Spanner table name to source-DB table name and column mapping.
+	UsedNames          map[string]bool              `json:"-"` // Map storing the names that are already assigned to tables, indices or foreign key contraints.
 	dataSink           func(table string, cols []string, values []interface{})
 	DataFlush          func()                  `json:"-"` // Data flush is used to flush out remaining writes and wait for them to complete.
 	Location           *time.Location          // Timezone (for timestamp conversion).
@@ -60,7 +60,7 @@ type Conv struct {
 	Source             string                  // Source Database type being migrated
 }
 
-type CustomIssue struct {
+type InvalidCheckExp struct {
 	IssueType  SchemaIssue
 	Expression string
 }
