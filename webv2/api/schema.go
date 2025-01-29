@@ -644,10 +644,20 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 			return
 		}
 
-		issueTypes, invalidExpIds := common.GetIssue(result)
+		issueTypes := common.GetErroredIssue(result)
 		if len(issueTypes) > 0 {
 			hasErrorOccurred = true
 			for tableId, issues := range issueTypes {
+
+				if sessionState.Conv.InvalidExpIds == nil {
+					sessionState.Conv.InvalidExpIds = map[string][]internal.CustomIssue{}
+					sessionState.Conv.InvalidExpIds[tableId] = []internal.CustomIssue{}
+				}
+
+				spIve := sessionState.Conv.InvalidExpIds[tableId]
+				spIve = append(spIve, issues...)
+				sessionState.Conv.InvalidExpIds[tableId] = spIve
+
 				for _, issue := range issues {
 					if _, exists := sessionState.Conv.SchemaIssues[tableId]; !exists {
 						sessionState.Conv.SchemaIssues[tableId] = internal.TableIssues{
@@ -656,22 +666,8 @@ func (expressionVerificationHandler *ExpressionsVerificationHandler) VerifyCheck
 					}
 
 					tableIssue := sessionState.Conv.SchemaIssues[tableId]
-
-					if !utilities.IsSchemaIssuePresent(tableIssue.TableLevelIssues, issue) {
-						tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue)
-					}
-
+					tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue.IssueType)
 					sessionState.Conv.SchemaIssues[tableId] = tableIssue
-				}
-			}
-		}
-
-		if len(invalidExpIds) > 0 {
-			for tableId, expressionIdList := range invalidExpIds {
-				for _, expId := range expressionIdList {
-					spschema := sessionState.Conv.SpSchema[tableId]
-					spschema.CheckConstraints = common.RemoveCheckConstraint(spschema.CheckConstraints, expId)
-					sessionState.Conv.SpSchema[tableId] = spschema
 				}
 			}
 		}

@@ -147,10 +147,15 @@ func RemoveError(tableIssues map[string]internal.TableIssues) map[string]interna
 
 }
 
+// type CustomIssue struct {
+// 	IssueType    internal.SchemaIssue
+// 	ExpressionId string
+// }
+
 // GetIssue it will collect all the error and return it
-func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.SchemaIssue, map[string][]string) {
+func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.CustomIssue, map[string][]string) {
 	exprOutputsByTable := make(map[string][]internal.ExpressionVerificationOutput)
-	issues := make(map[string][]internal.SchemaIssue)
+	issues := make(map[string][]internal.CustomIssue)
 	invalidExpIds := make(map[string][]string)
 	for _, ev := range result.ExpressionVerificationOutputList {
 		if !ev.Result {
@@ -176,7 +181,10 @@ func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.Sc
 			default:
 				issue = internal.GenericError
 			}
-			issues[tableId] = append(issues[tableId], issue)
+			issues[tableId] = append(issues[tableId], internal.CustomIssue{
+				IssueType:  issue,
+				Expression: ev.ExpressionDetail.Expression,
+			})
 			invalidExpIds[tableId] = append(invalidExpIds[tableId], ev.ExpressionDetail.ExpressionId)
 
 		}
@@ -184,6 +192,47 @@ func GetIssue(result internal.VerifyExpressionsOutput) (map[string][]internal.Sc
 	}
 
 	return issues, invalidExpIds
+
+}
+
+// GetErroredIssue it will collect all the error and return it
+func GetErroredIssue(result internal.VerifyExpressionsOutput) map[string][]internal.CustomIssue {
+	exprOutputsByTable := make(map[string][]internal.ExpressionVerificationOutput)
+	issues := make(map[string][]internal.CustomIssue)
+	for _, ev := range result.ExpressionVerificationOutputList {
+		if !ev.Result {
+			tableId := ev.ExpressionDetail.Metadata["tableId"]
+			exprOutputsByTable[tableId] = append(exprOutputsByTable[tableId], ev)
+		}
+	}
+
+	for tableId, exprOutputs := range exprOutputsByTable {
+
+		for _, ev := range exprOutputs {
+			var issue internal.SchemaIssue
+
+			switch {
+			case strings.Contains(ev.Err.Error(), "No matching signature for operator"):
+				issue = internal.TypeMismatchError
+			case strings.Contains(ev.Err.Error(), "Syntax error"):
+				issue = internal.InvalidConditionError
+			case strings.Contains(ev.Err.Error(), "Unrecognized name"):
+				issue = internal.ColumnNotFoundError
+			case strings.Contains(ev.Err.Error(), "Function not found"):
+				issue = internal.CheckConstraintFunctionNotFoundError
+			default:
+				issue = internal.GenericError
+			}
+			issues[tableId] = append(issues[tableId], internal.CustomIssue{
+				IssueType:  issue,
+				Expression: ev.ExpressionDetail.Expression,
+			})
+
+		}
+
+	}
+
+	return issues
 
 }
 
@@ -220,6 +269,15 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 		if len(issueTypes) > 0 {
 			for tableId, issues := range issueTypes {
 
+				if conv.InvalidExpIds == nil {
+					conv.InvalidExpIds = map[string][]internal.CustomIssue{}
+					conv.InvalidExpIds[tableId] = []internal.CustomIssue{}
+				}
+
+				spIve := conv.InvalidExpIds[tableId]
+				spIve = append(spIve, issues...)
+				conv.InvalidExpIds[tableId] = spIve
+
 				for _, issue := range issues {
 					if _, exists := conv.SchemaIssues[tableId]; !exists {
 						conv.SchemaIssues[tableId] = internal.TableIssues{
@@ -228,10 +286,7 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 					}
 
 					tableIssue := conv.SchemaIssues[tableId]
-
-					if !IsSchemaIssuePresent(tableIssue.TableLevelIssues, issue) {
-						tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue)
-					}
+					tableIssue.TableLevelIssues = append(tableIssue.TableLevelIssues, issue.IssueType)
 					conv.SchemaIssues[tableId] = tableIssue
 				}
 			}
@@ -244,6 +299,7 @@ func (ss *SchemaToSpannerImpl) VerifyExpressions(conv *internal.Conv) error {
 					spschema.CheckConstraints = RemoveCheckConstraint(spschema.CheckConstraints, expId)
 					conv.SpSchema[tableId] = spschema
 				}
+
 			}
 		}
 	}
