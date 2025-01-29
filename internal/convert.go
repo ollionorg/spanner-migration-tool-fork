@@ -34,7 +34,7 @@ type Conv struct {
 	SyntheticPKeys     map[string]SyntheticPKey     // Maps Spanner table name to synthetic primary key (if needed).
 	SrcSchema          map[string]schema.Table      // Maps source-DB table name to schema information.
 	SchemaIssues       map[string]TableIssues       // Maps source-DB table/col to list of schema conversion issues.
-	InvalidCheckExp    map[string][]InvalidCheckExp // list of check constraints expression and issues list.
+	InvalidCheckExp    map[string][]InvalidCheckExp // List of check constraint expressions and corresponding issues.
 	ToSpanner          map[string]NameAndCols       `json:"-"` // Maps from source-DB table name to Spanner name and column mapping.
 	ToSource           map[string]NameAndCols       `json:"-"` // Maps from Spanner table name to source-DB table name and column mapping.
 	UsedNames          map[string]bool              `json:"-"` // Map storing the names that are already assigned to tables, indices or foreign key contraints.
