@@ -606,10 +606,6 @@ func checkAndAddParentheses(checkClause string) string {
 	openCount := strings.Count(trimmedCheckClause, "(")
 	closeCount := strings.Count(trimmedCheckClause, ")")
 
-	if openCount == closeCount && openCount == 0 {
-		return "(" + trimmedCheckClause + ")"
-	}
-
 	if openCount > closeCount {
 		trimmedCheckClause += strings.Repeat(")", openCount-closeCount)
 	} else if closeCount > openCount {
