@@ -132,6 +132,7 @@ func (cmd *SchemaCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interfa
 			" The source profile will not be used for the schema conversion.", zap.String("sessionFile", cmd.sessionJSON))
 		conv = internal.MakeConv()
 		err = conversion.ReadSessionFile(conv, cmd.sessionJSON)
+
 		if err != nil {
 			return subcommands.ExitFailure
 		}

@@ -583,6 +583,12 @@ func UpdateCheckConstraint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if sessionState.Conv.SpDialect == constants.DIALECT_POSTGRESQL {
+		for i := range newCc {
+			newCc[i].Expr = strings.ReplaceAll(newCc[i].Expr, "`", "")
+		}
+	}
+
 	sp := sessionState.Conv.SpSchema[tableId]
 	sp.CheckConstraints = newCc
 	sessionState.Conv.SpSchema[tableId] = sp

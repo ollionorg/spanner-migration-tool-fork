@@ -345,6 +345,9 @@ func (isi InfoSchemaImpl) processRow(
 	case "CHECK":
 		checkClause = collationRegex.ReplaceAllString(checkClause, "")
 		checkClause = checkAndAddParentheses(checkClause)
+		if conv.SpDialect == constants.DIALECT_POSTGRESQL {
+			checkClause = strings.ReplaceAll(checkClause, "`", "")
+		}
 		*checkKeys = append(*checkKeys, schema.CheckConstraint{Name: constraintName, Expr: checkClause, ExprId: internal.GenerateExpressionId(), Id: internal.GenerateCheckConstrainstId()})
 	default:
 		m[col] = append(m[col], constraintType)

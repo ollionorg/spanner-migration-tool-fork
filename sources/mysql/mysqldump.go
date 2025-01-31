@@ -250,7 +250,7 @@ func processCreateTable(conv *internal.Conv, stmt *ast.CreateTableStmt) {
 	var fkeys []schema.ForeignKey
 	var index []schema.Index
 
-	checkConstraints := getCheckConstraints(stmt.Constraints)
+	checkConstraints := getCheckConstraints(stmt.Constraints, conv)
 
 	for _, element := range stmt.Cols {
 		_, col, constraint, err := processColumn(conv, tableName, element)
@@ -334,12 +334,15 @@ func processConstraint(conv *internal.Conv, tableId string, constraint *ast.Cons
 }
 
 // method to get check constraints using tiDB parser
-func getCheckConstraints(constraints []*ast.Constraint) (checkConstraints []schema.CheckConstraint) {
+func getCheckConstraints(constraints []*ast.Constraint, conv *internal.Conv) (checkConstraints []schema.CheckConstraint) {
 	for _, constraint := range constraints {
 		if constraint.Tp == ast.ConstraintCheck {
 			exp := expressionToString(constraint.Expr)
 			exp = dbcollationRegex.ReplaceAllString(exp, "$1")
 			exp = checkAndAddParentheses(exp)
+			if conv.SpDialect == constants.DIALECT_POSTGRESQL {
+				exp = strings.ReplaceAll(exp, "`", "")
+			}
 			checkConstraint := schema.CheckConstraint{
 				Name:   constraint.Name,
 				Expr:   exp,
