@@ -1143,7 +1143,7 @@ func TestFormatCheckConstraints(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			actual := FormatCheckConstraints(tc.cks)
+			actual := FormatCheckConstraints(tc.cks, constants.DIALECT_GOOGLESQL)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
