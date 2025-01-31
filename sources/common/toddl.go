@@ -233,20 +233,13 @@ func GetErroredIssue(result internal.VerifyExpressionsOutput) map[string][]inter
 
 // RemoveCheckConstraint this method will remove the constraint which has error
 func RemoveCheckConstraint(checkConstraints []ddl.CheckConstraint, expId string) []ddl.CheckConstraint {
-	constraintMap := make(map[string]ddl.CheckConstraint)
+	var filteredConstraints []ddl.CheckConstraint
 
 	for _, checkConstraint := range checkConstraints {
-		constraintMap[checkConstraint.ExprId] = checkConstraint
+		if checkConstraint.ExprId != expId {
+			filteredConstraints = append(filteredConstraints, checkConstraint)
+		}
 	}
-
-	delete(constraintMap, expId)
-
-	filteredConstraints := make([]ddl.CheckConstraint, 0, len(constraintMap))
-
-	for _, constraint := range constraintMap {
-		filteredConstraints = append(filteredConstraints, constraint)
-	}
-
 	return filteredConstraints
 }
 
