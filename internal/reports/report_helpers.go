@@ -115,10 +115,10 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 		if p.severity == warning && len(conv.InvalidCheckExp[tableId]) != 0 {
 			for _, invalidExp := range conv.InvalidCheckExp[tableId] {
 				var backtickMsg string = ""
-				var pgMsg string = "with constraint logic"
+				var dialectMsg string = "with constraint logic"
 				if conv.SpDialect == constants.DIALECT_POSTGRESQL && strings.ContainsAny(invalidExp.Expression, "`") {
 					backtickMsg = "caused by backticks"
-					pgMsg = "with the PostgreSQL dialect"
+					dialectMsg = "with the PostgreSQL dialect"
 				}
 				switch invalidExp.IssueType {
 				case internal.TypeMismatch:
@@ -130,7 +130,7 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 				case internal.InvalidCondition:
 					toAppend := Issue{
 						Category:    IssueDB[invalidExp.IssueType].Category,
-						Description: fmt.Sprintf("Table '%s': The check constraint %s contains an invalid condition %s that is incompatible %s. As a result, the check constraint has not been applied and has been dropped", conv.SpSchema[tableId].Name, invalidExp.Expression, backtickMsg, pgMsg),
+						Description: fmt.Sprintf("Table '%s': The check constraint %s contains an invalid condition %s that is incompatible %s. As a result, the check constraint has not been applied and has been dropped", conv.SpSchema[tableId].Name, invalidExp.Expression, backtickMsg, dialectMsg),
 					}
 					l = append(l, toAppend)
 				case internal.ColumnNotFound:
@@ -161,10 +161,10 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 
 			for _, invalidExp := range conv.InvalidCheckExp[tableId] {
 				var backtickMsg string = ""
-				var pgMsg string = "with the constraint logic"
+				var dialectMsg string = "with the constraint logic"
 				if conv.SpDialect == constants.DIALECT_POSTGRESQL && strings.ContainsAny(invalidExp.Expression, "`") {
 					backtickMsg = "caused by backticks"
-					pgMsg = "with the PostgreSQL dialect"
+					dialectMsg = "with the PostgreSQL dialect"
 				}
 
 				switch invalidExp.IssueType {
@@ -177,7 +177,7 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 				case internal.InvalidConditionError:
 					toAppend := Issue{
 						Category:    IssueDB[invalidExp.IssueType].Category,
-						Description: fmt.Sprintf("Table '%s': The check constraint %s contains an invalid condition %s that is incompatible %s. Kindly address the errors related to the check constraint", conv.SpSchema[tableId].Name, invalidExp.Expression, backtickMsg, pgMsg),
+						Description: fmt.Sprintf("Table '%s': The check constraint %s contains an invalid condition %s that is incompatible %s. Kindly address the errors related to the check constraint", conv.SpSchema[tableId].Name, invalidExp.Expression, backtickMsg, dialectMsg),
 					}
 					l = append(l, toAppend)
 				case internal.ColumnNotFoundError:
