@@ -115,7 +115,7 @@ func buildTableReportBody(conv *internal.Conv, tableId string, issues map[string
 		if p.severity == warning && len(conv.InvalidCheckExp[tableId]) != 0 {
 			for _, invalidExp := range conv.InvalidCheckExp[tableId] {
 				var backtickMsg string = ""
-				var dialectMsg string = "with constraint logic"
+				var dialectMsg string = "with the constraint logic"
 				if conv.SpDialect == constants.DIALECT_POSTGRESQL && strings.ContainsAny(invalidExp.Expression, "`") {
 					backtickMsg = "caused by backticks"
 					dialectMsg = "with the PostgreSQL dialect"
