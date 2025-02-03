@@ -286,7 +286,7 @@ func TestPrintCreateTable(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		assert.Equal(t, tc.expected, tc.ct.PrintCreateTable(s, Config{ProtectIds: tc.protectIds}))
+		assert.Equal(t, tc.expected, tc.ct.PrintCreateTable(s, Config{ProtectIds: tc.protectIds, SpDialect: constants.DIALECT_GOOGLESQL}))
 	}
 }
 
@@ -1143,7 +1143,50 @@ func TestFormatCheckConstraints(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			actual := FormatCheckConstraints(tc.cks)
+			actual := FormatCheckConstraints(tc.cks, constants.DIALECT_GOOGLESQL)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func TestFormatCheckConstraintsPG(t *testing.T) {
+	tests := []struct {
+		description string
+		cks         []CheckConstraint
+		expected    string
+	}{
+		{
+			description: "Empty constraints list",
+			cks:         []CheckConstraint{},
+			expected:    "",
+		},
+		{
+			description: "Single constraint",
+			cks: []CheckConstraint{
+				{Name: "ck1", Expr: "(id > 0)"},
+			},
+			expected: "\tCONSTRAINT ck1 CHECK (id > 0),\n",
+		},
+		{
+			description: "Constraint without name",
+			cks: []CheckConstraint{
+				{Name: "", Expr: "(id > 0)"},
+			},
+			expected: "\tCHECK (id > 0),\n",
+		},
+		{
+			description: "Multiple constraints",
+			cks: []CheckConstraint{
+				{Name: "ck1", Expr: "(id > 0)"},
+				{Name: "ck2", Expr: "(name IS NOT NULL)"},
+			},
+			expected: "\tCONSTRAINT ck1 CHECK (id > 0),\n\tCONSTRAINT ck2 CHECK (name IS NOT NULL),\n",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			actual := FormatCheckConstraints(tc.cks, constants.DIALECT_POSTGRESQL)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
