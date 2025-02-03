@@ -303,6 +303,10 @@ func TestPrintCreateTablePG(t *testing.T) {
 			},
 			PrimaryKeys: []IndexKey{{ColId: "col1", Desc: true}},
 			ForeignKeys: nil,
+			CheckConstraints: []CheckConstraint{
+				{Id: "ck1", Name: "check_1", Expr: "(age > 18)"},
+				{Id: "ck2", Name: "check_2", Expr: "(age < 99)"},
+			},
 			Indexes:     nil,
 			ParentTable: InterleavedParent{},
 			Comment:     "",
@@ -316,12 +320,13 @@ func TestPrintCreateTablePG(t *testing.T) {
 				"col4": {Name: "col4", T: Type{Name: Int64}, NotNull: true},
 				"col5": {Name: "col5", T: Type{Name: String, Len: MaxLength}, NotNull: false},
 			},
-			PrimaryKeys: []IndexKey{{ColId: "col4", Desc: true}},
-			ForeignKeys: nil,
-			Indexes:     nil,
-			ParentTable: InterleavedParent{Id: "t1", OnDelete: constants.FK_CASCADE},
-			Comment:     "",
-			Id:          "t2",
+			PrimaryKeys:      []IndexKey{{ColId: "col4", Desc: true}},
+			ForeignKeys:      nil,
+			Indexes:          nil,
+			CheckConstraints: nil,
+			ParentTable:      InterleavedParent{Id: "t1", OnDelete: constants.FK_CASCADE},
+			Comment:          "",
+			Id:               "t2",
 		},
 		"t3": CreateTable{
 			Name:          "table3",
@@ -330,12 +335,13 @@ func TestPrintCreateTablePG(t *testing.T) {
 			ColDefs: map[string]ColumnDef{
 				"col6": {Name: "col6", T: Type{Name: Int64}, NotNull: true},
 			},
-			PrimaryKeys: []IndexKey{{ColId: "col6", Desc: true}},
-			ForeignKeys: nil,
-			Indexes:     nil,
-			ParentTable: InterleavedParent{Id: "t1", OnDelete: ""},
-			Comment:     "",
-			Id:          "t3",
+			PrimaryKeys:      []IndexKey{{ColId: "col6", Desc: true}},
+			ForeignKeys:      nil,
+			Indexes:          nil,
+			CheckConstraints: nil,
+			ParentTable:      InterleavedParent{Id: "t1", OnDelete: ""},
+			Comment:          "",
+			Id:               "t3",
 		},
 	}
 	tests := []struct {
@@ -352,6 +358,7 @@ func TestPrintCreateTablePG(t *testing.T) {
 				"	col1 INT8 NOT NULL ,\n" +
 				"	col2 VARCHAR(2621440),\n" +
 				"	col3 BYTEA,\n" +
+				"\tCONSTRAINT check_1 CHECK (age > 18),\n\tCONSTRAINT check_2 CHECK (age < 99),\n" +
 				"	PRIMARY KEY (col1 DESC)\n" +
 				")",
 		},
@@ -363,6 +370,7 @@ func TestPrintCreateTablePG(t *testing.T) {
 				"	col1 INT8 NOT NULL ,\n" +
 				"	col2 VARCHAR(2621440),\n" +
 				"	col3 BYTEA,\n" +
+				"\tCONSTRAINT check_1 CHECK (age > 18),\n\tCONSTRAINT check_2 CHECK (age < 99),\n" +
 				"	PRIMARY KEY (col1 DESC)\n" +
 				")",
 		},
