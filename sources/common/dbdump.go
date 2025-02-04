@@ -44,7 +44,7 @@ func ProcessDbDump(conv *internal.Conv, r *internal.Reader, dbDump DbDump, ddlVe
 		}
 		err := schemaToSpanner.SchemaToSpannerDDL(conv, dbDump.GetToDdl(), internal.AdditionalSchemaAttributes{})
 		if err != nil {
-			return nil
+			return err
 		}
 		conv.AddPrimaryKeys()
 	}
