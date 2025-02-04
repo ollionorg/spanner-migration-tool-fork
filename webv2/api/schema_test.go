@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -2847,7 +2848,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			ctx := req.Context()
+			ctx := context.Background()
 			sessionState := session.GetSessionState()
 			sessionState.Driver = constants.MYSQL
 			sessionState.SpannerInstanceID = "foo"
@@ -2871,7 +2872,6 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 			})
 
 			mockAccessor.On("RefreshSpannerClient", ctx, mock.Anything, mock.Anything).Return(nil)
-
 			rr := httptest.NewRecorder()
 			handler.VerifyCheckConstraintExpression(rr, req)
 
