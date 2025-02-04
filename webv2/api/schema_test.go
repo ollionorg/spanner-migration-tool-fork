@@ -2,7 +2,6 @@ package api_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -2848,7 +2847,7 @@ func TestVerifyCheckConstraintExpressions(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			ctx := context.Background()
+			ctx := req.Context()
 			sessionState := session.GetSessionState()
 			sessionState.Driver = constants.MYSQL
 			sessionState.SpannerInstanceID = "foo"
