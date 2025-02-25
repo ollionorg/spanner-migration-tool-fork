@@ -35,6 +35,57 @@ func GenerateColIds(count int) []string {
 	}
 	return colIds
 }
+func GeneratePrimaryColIds(count int) []ddl.IndexKey {
+	var primaryKeys []ddl.IndexKey
+	for i := 1; i <= count; i++ {
+		colId := fmt.Sprintf("c%d", i)
+		primaryKeys = append(primaryKeys, ddl.IndexKey{ColId: colId})
+	}
+	return primaryKeys
+}
+func GenerateSpSchema(count int) map[string]ddl.CreateTable {
+	spschema := make(map[string]ddl.CreateTable)
+	for i := 1; i <= count; i++ {
+		tableId := fmt.Sprintf("t%d", i)
+		tableName := fmt.Sprintf("table%d", i)
+		referTableId := fmt.Sprintf("t%d", i-1)
+		spschema[tableId] = ddl.CreateTable{
+			Name:        "table1",
+			Id:          tableName,
+			PrimaryKeys: GeneratePrimaryColIds(i),
+			ColIds:      GenerateColIds(i + 1),
+			ColDefs:     GenerateColumnDefsForTable(i + 1),
+			ForeignKeys: GenerateForeignKeys(i-1, referTableId),
+		}
+	}
+
+	return spschema
+}
+
+func GenerateForeignKeys(count int, referTableId string) []ddl.Foreignkey {
+	if count != 0 {
+		var colIds []string
+		var referColumnIds []string
+		for i := 1; i <= count; i++ {
+			colId := fmt.Sprintf("c%d", i)
+			colIds = append(colIds, colId)
+			referColumnIds = append(referColumnIds, colId)
+		}
+		fname := fmt.Sprintf("level%d_ibfk_1", count)
+		return []ddl.Foreignkey{{
+			Name:           fname,
+			ColIds:         colIds,
+			ReferColumnIds: referColumnIds,
+			ReferTableId:   referTableId,
+			Id:             GenerateRandomString(2),
+			OnDelete:       "NO ACTION",
+			OnUpdate:       "NO ACTION",
+		}}
+	} else {
+		return nil
+	}
+
+}
 
 func GenerateTables(count int) ddl.Schema {
 	tables := make(ddl.Schema)
