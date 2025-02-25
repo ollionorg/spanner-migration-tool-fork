@@ -468,24 +468,26 @@ func TestSpannerAccessorImpl_CreateDatabase(t *testing.T) {
 
 func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T) {
 	testCases := []struct {
-		name          string
-		acm           spanneradmin.AdminClientMock
-		dialect       string
-		migrationType string
-		SpSchema      ddl.Schema
-		expectError   bool
+		name             string
+		acm              spanneradmin.AdminClientMock
+		dialect          string
+		migrationType    string
+		SpSchema         ddl.Schema
+		expectedErrorMsg string
+		expectError      bool
 	}{
 		{
 			name: "GoogleSql with table more than 5000",
 			acm: spanneradmin.AdminClientMock{
 				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return nil, fmt.Errorf("error")
+					return nil, fmt.Errorf(utils.TablePerDbError)
 				},
 			},
-			expectError:   true,
-			dialect:       "google_standard_sql",
-			SpSchema:      utils.GenerateTables(5005),
-			migrationType: "dataflow",
+			expectedErrorMsg: utils.TablePerDbExpectError,
+			expectError:      true,
+			dialect:          "google_standard_sql",
+			SpSchema:         utils.GenerateTables(5005),
+			migrationType:    "dataflow",
 		},
 		{
 			name: "GoogleSql with 5000 tables",
@@ -496,20 +498,22 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 					}, nil
 				},
 			},
-			expectError:   false,
-			dialect:       "google_standard_sql",
-			SpSchema:      utils.GenerateTables(5000),
-			migrationType: "dataflow",
+			expectedErrorMsg: "",
+			expectError:      false,
+			dialect:          "google_standard_sql",
+			SpSchema:         utils.GenerateTables(5000),
+			migrationType:    "dataflow",
 		},
 		{
 			name: "GoogleSql with table has more than 1024 columns",
 			acm: spanneradmin.AdminClientMock{
 				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return nil, fmt.Errorf("error")
+					return nil, fmt.Errorf(utils.ColumnPerTableError)
 				},
 			},
-			expectError: true,
-			dialect:     "google_standard_sql",
+			expectedErrorMsg: utils.ColumnPerTableExpectError,
+			expectError:      true,
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        "table 1",
@@ -517,6 +521,29 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 					PrimaryKeys: []ddl.IndexKey{{ColId: "c1"}},
 					ColIds:      utils.GenerateColIds(1030),
 					ColDefs:     utils.GenerateColumnDefsForTable(1030),
+				},
+			},
+			migrationType: "dataflow",
+		},
+		{
+			name: "GoogleSql with table has 1024 columns",
+			acm: spanneradmin.AdminClientMock{
+				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
+					return &spanneradmin.CreateDatabaseOperationMock{
+						WaitMock: func(ctx context.Context, opts ...gax.CallOption) (*databasepb.Database, error) { return nil, nil },
+					}, nil
+				},
+			},
+			expectedErrorMsg: "",
+			expectError:      false,
+			dialect:          "google_standard_sql",
+			SpSchema: map[string]ddl.CreateTable{
+				"t1": {
+					Name:        "table 1",
+					Id:          "t1",
+					PrimaryKeys: []ddl.IndexKey{{ColId: "c1"}},
+					ColIds:      utils.GenerateColIds(1024),
+					ColDefs:     utils.GenerateColumnDefsForTable(1024),
 				},
 			},
 			migrationType: "dataflow",
@@ -530,22 +557,24 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 					}, nil
 				},
 			},
-			expectError:   false,
-			dialect:       "google_standard_sql",
-			SpSchema:      utils.GenerateSpSchema(7),
-			migrationType: "dataflow",
+			expectedErrorMsg: "",
+			expectError:      false,
+			dialect:          "google_standard_sql",
+			SpSchema:         utils.GenerateSpSchema(7),
+			migrationType:    "dataflow",
 		},
 		{
 			name: "GoogleSql with table interleaving depth is more than 7",
 			acm: spanneradmin.AdminClientMock{
 				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return nil, fmt.Errorf("error")
+					return nil, fmt.Errorf(utils.InterleaveDepthError)
 				},
 			},
-			expectError:   true,
-			dialect:       "google_standard_sql",
-			SpSchema:      utils.GenerateSpSchema(8),
-			migrationType: "dataflow",
+			expectedErrorMsg: utils.InterleaveDepthExpectError,
+			expectError:      true,
+			dialect:          "google_standard_sql",
+			SpSchema:         utils.GenerateSpSchema(8),
+			migrationType:    "dataflow",
 		},
 		{
 			name: "GoogleSql with table has 16 columns as key",
@@ -556,8 +585,9 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 					}, nil
 				},
 			},
-			expectError: false,
-			dialect:     "google_standard_sql",
+			expectError:      false,
+			expectedErrorMsg: "",
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        "table 1",
@@ -573,11 +603,12 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 			name: "GoogleSql with table has more than 16 columns as key",
 			acm: spanneradmin.AdminClientMock{
 				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return nil, fmt.Errorf("error")
+					return nil, fmt.Errorf(utils.ColumnKeyPerTableError)
 				},
 			},
-			expectError: true,
-			dialect:     "google_standard_sql",
+			expectedErrorMsg: utils.ColumnKeyPerTableExpectError,
+			expectError:      true,
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        "table 1",
@@ -589,37 +620,17 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 			},
 			migrationType: "dataflow",
 		},
-		{
-			name: "GoogleSql with table has 1024 columns",
-			acm: spanneradmin.AdminClientMock{
-				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return &spanneradmin.CreateDatabaseOperationMock{
-						WaitMock: func(ctx context.Context, opts ...gax.CallOption) (*databasepb.Database, error) { return nil, nil },
-					}, nil
-				},
-			},
-			expectError: false,
-			dialect:     "google_standard_sql",
-			SpSchema: map[string]ddl.CreateTable{
-				"t1": {
-					Name:        "table 1",
-					Id:          "t1",
-					PrimaryKeys: []ddl.IndexKey{{ColId: "c1"}},
-					ColIds:      utils.GenerateColIds(1024),
-					ColDefs:     utils.GenerateColumnDefsForTable(1024),
-				},
-			},
-			migrationType: "dataflow",
-		},
+
 		{
 			name: "GoogleSql with table name more than 128 character",
 			acm: spanneradmin.AdminClientMock{
 				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return nil, fmt.Errorf("error")
+					return nil, fmt.Errorf(utils.TableNameError)
 				},
 			},
-			expectError: true,
-			dialect:     "google_standard_sql",
+			expectedErrorMsg: utils.TableNameExpectError,
+			expectError:      true,
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        utils.GenerateRandomString(130),
@@ -642,8 +653,9 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 					}, nil
 				},
 			},
-			expectError: false,
-			dialect:     "google_standard_sql",
+			expectError:      false,
+			expectedErrorMsg: "",
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        utils.GenerateRandomString(128),
@@ -661,11 +673,12 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 			name: "GoogleSql with column name more than 128 character",
 			acm: spanneradmin.AdminClientMock{
 				CreateDatabaseMock: func(ctx context.Context, req *databasepb.CreateDatabaseRequest, opts ...gax.CallOption) (spanneradmin.CreateDatabaseOperation, error) {
-					return nil, fmt.Errorf("error")
+					return nil, fmt.Errorf(utils.ColumnNameError)
 				},
 			},
-			expectError: true,
-			dialect:     "google_standard_sql",
+			expectedErrorMsg: utils.ColumnNameExpectError,
+			expectError:      true,
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        "table 1",
@@ -689,8 +702,9 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 					}, nil
 				},
 			},
-			expectError: false,
-			dialect:     "google_standard_sql",
+			expectedErrorMsg: "",
+			expectError:      false,
+			dialect:          "google_standard_sql",
 			SpSchema: map[string]ddl.CreateTable{
 				"t1": {
 					Name:        "table 1",
@@ -714,6 +728,9 @@ func TestSpannerAccessorImpl_CreateDatabase_exceeds_and_hit_limits(t *testing.T)
 		spA := SpannerAccessorImpl{AdminClient: &tc.acm}
 		err := spA.CreateDatabase(ctx, dbURI, conv, "", tc.migrationType)
 		assert.Equal(t, tc.expectError, err != nil, tc.name)
+		if err != nil {
+			assert.Equal(t, tc.expectedErrorMsg, err.Error(), tc.name)
+		}
 	}
 }
 
